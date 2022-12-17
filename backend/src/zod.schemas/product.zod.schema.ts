@@ -1,5 +1,5 @@
 import { z } from "zod";
 
-export const ratinZodSchema = z.object({
+export const ratingZodSchema = z.object({
     rating: z.number(),
 });

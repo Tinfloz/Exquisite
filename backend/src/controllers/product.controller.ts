@@ -5,7 +5,7 @@ import Sellers from "../models/seller.model";
 import _ from "lodash";
 import Orders from "../models/order.model";
 import { Product } from "../models/product.model";
-import { ratinZodSchema } from "../zod.schemas/product.zod.schema";
+import { ratingZodSchema } from "../zod.schemas/product.zod.schema";
 
 // get all products
 const getAllProducts = async (req: Request, res: Response): Promise<void> => {
@@ -114,7 +114,7 @@ const rateProducts = async (req: Request, res: Response): Promise<void> => {
         if (!mongoose.Types.ObjectId.isValid(id)) {
             throw "id not valid"
         };
-        const result = ratinZodSchema.safeParse(req.body);
+        const result = ratingZodSchema.safeParse(req.body);
         if (!result.success) {
             res.status(400).json({
                 success: false,
