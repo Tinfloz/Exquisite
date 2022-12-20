@@ -30,7 +30,7 @@ const getProductsById = async (req: Request, res: Response): Promise<void> => {
         if (!mongoose.Types.ObjectId.isValid(id)) {
             throw "id not valid"
         };
-        const product = await Products.findById(id);
+        const product = await Products.findById(id).populate("comments.user");
         res.status(200).json({
             success: true,
             product

@@ -22,8 +22,8 @@ import { ICartElement, ISendUser } from '../interfaces/redux.interfaces/auth.sli
 import logo from "../assets/logo.jpeg"
 import { AiOutlineSearch, AiOutlineShoppingCart, AiOutlineDelete } from "react-icons/ai";
 import { useNavigate, Link } from "react-router-dom";
-import { deleteIndividualItemsById, logout, reset, resetUserHelpers } from "../reducers/auth.reducer/auth.slice";
-import { useAppDispatch } from "../typed.hooks/hooks";
+import { clearUserCart, deleteIndividualItemsById, logout, reset, resetUserHelpers } from "../reducers/auth.reducer/auth.slice";
+import { useAppDispatch, useAppSelector } from "../typed.hooks/hooks";
 
 
 interface INavBarProp {
@@ -32,12 +32,42 @@ interface INavBarProp {
 
 const NavBar: FC<INavBarProp> = ({ userProp }) => {
 
+    const [cleared, setCleared] = useState<boolean>(false)
     const [toLogout, setToLogout] = useState<boolean>(false)
     const navigate = useNavigate();
     const { isOpen, onOpen, onClose } = useDisclosure();
     const btnRef = useRef() as MutableRefObject<HTMLButtonElement>
     const dispatch = useAppDispatch();
     const toast = useToast();
+    const { isSuccess, isError } = useAppSelector(state => state.auth);
+
+
+    useEffect(() => {
+        if (!isSuccess && !isError) {
+            return
+        } else if (isSuccess && cleared) {
+            toast({
+                position: "bottom-left",
+                title: "Success",
+                description: "Cart cleared!",
+                status: "success",
+                duration: 5000,
+                isClosable: true,
+            });
+        } else if (isError && cleared) {
+            toast({
+                position: "bottom-left",
+                title: "Success",
+                description: "Cart cleared!",
+                status: "success",
+                duration: 5000,
+                isClosable: true,
+            });
+        }
+        setCleared(false)
+        dispatch(resetUserHelpers())
+    }, [isSuccess, isError, toast, dispatch, cleared])
+
 
     useEffect(() => {
         if (!toLogout) {
@@ -185,7 +215,12 @@ const NavBar: FC<INavBarProp> = ({ userProp }) => {
                                                                 </DrawerBody>
                                                                 <DrawerFooter>
                                                                     <HStack spacing="1.5vh">
-                                                                        <Button variant='outline' mr="3">
+                                                                        <Button variant='outline' mr="3"
+                                                                            onClick={async () => {
+                                                                                setCleared(true)
+                                                                                await dispatch(clearUserCart())
+                                                                            }}
+                                                                        >
                                                                             Clear cart
                                                                         </Button>
                                                                         <Button disabled={userProp?.loginUser?.cart?.length === 0 ? true : false} bg="purple.300">

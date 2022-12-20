@@ -175,13 +175,12 @@ const userSlice = createSlice({
             .addCase(clearUserCart.pending, state => {
                 state.isLoading = true;
             })
-            .addCase(clearUserCart.fulfilled, (state, action: PayloadAction<ICartResponse>) => {
+            .addCase(clearUserCart.fulfilled, state => {
                 state.isLoading = false;
                 state.isSuccess = true;
                 const newLoginUser = { ...state.user!.loginUser, cart: [] };
                 const newUser = { ...state.user!, loginUser: newLoginUser };
                 state.user = newUser;
-                state.message = action.payload.message!
             })
             .addCase(clearUserCart.rejected, (state, { payload }) => {
                 state.isLoading = false;

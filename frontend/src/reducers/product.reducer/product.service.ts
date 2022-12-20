@@ -15,6 +15,7 @@ const getAllProducts = async (token: string): Promise<IProductResponse> => {
     return response.data;
 };
 
+// get products by id
 const getIndividualProduct = async (token: string, id: string): Promise<IProductResponse> => {
     const config = {
         headers: {
@@ -24,6 +25,8 @@ const getIndividualProduct = async (token: string, id: string): Promise<IProduct
     const response = await axios.get(API_URL + `/get/products/${id}`, config);
     return response.data;
 };
+
+
 
 const productService = {
     getIndividualProduct,
