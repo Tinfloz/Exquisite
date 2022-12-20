@@ -1,20 +1,30 @@
-import React, { FC, useState, ChangeEvent } from 'react';
-import { Flex, Box, Text, VStack, Input, Button } from "@chakra-ui/react";
-
-interface First {
-    first: boolean,
-    seller: boolean
-};
-
-interface IUserCreds {
-    email: string,
-    password: string,
-    userType: string,
-    name: string
-};
-
+import React, { FC, useState, useEffect, ChangeEvent } from 'react';
+import { Flex, Box, Text, VStack, Input, Button, useToast } from "@chakra-ui/react";
+import { First, IUserCreds } from "../interfaces/user.creds";
+import { useAppDispatch, useAppSelector } from '../typed.hooks/hooks';
+import { resetUserHelpers, userLogin, userRegister } from '../reducers/auth.reducer/auth.slice';
+import { useNavigate } from 'react-router-dom';
 
 const UserCreds: FC<First> = ({ first, seller }) => {
+
+    const dispatch = useAppDispatch();
+
+    const navigate = useNavigate();
+
+    const toast = useToast();
+
+    const { isSuccess, isError } = useAppSelector(state => state.auth);
+
+    const handleSubmit = async (): Promise<void> => {
+        first ?
+            (
+                await dispatch(userRegister(creds))
+            ) :
+            (
+                await dispatch(userLogin(creds))
+            )
+        localStorage.removeItem("type")
+    }
 
     const [creds, setCreds] = useState<IUserCreds>({
         email: "",
@@ -29,6 +39,33 @@ const UserCreds: FC<First> = ({ first, seller }) => {
             [e.target.name]: e.target.value
         }));
     };
+
+    useEffect(() => {
+        if (!isSuccess && !isError) {
+            return
+        } else if (isSuccess) {
+            toast({
+                position: "bottom-left",
+                title: "Success",
+                description: first ? `${seller ? "Registered successfully as a vendor!" : "Registered successfully!"}` : "Logged in successfully!",
+                status: "success",
+                duration: 9000,
+                isClosable: true,
+            })
+            navigate("/home");
+        } else if (isError) {
+            toast({
+                position: "bottom-left",
+                title: "Error",
+                description: "Sorry! Could not log you in",
+                status: "warning",
+                duration: 9000,
+                isClosable: true,
+            })
+            navigate(seller ? "/login/vendor" : "/login/client");
+        }
+        dispatch(resetUserHelpers());
+    }, [isSuccess, isError, toast, navigate])
 
     return (
         <Box
@@ -77,7 +114,7 @@ const UserCreds: FC<First> = ({ first, seller }) => {
                             )
                     }
                     <Button
-                        onClick={() => localStorage.removeItem("type")}
+                        onClick={handleSubmit}
                     >
                         {
                             first ? "Register" : "Login"

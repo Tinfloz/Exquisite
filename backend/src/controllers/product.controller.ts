@@ -90,7 +90,7 @@ const getTopProductsByRatings = async (req: Request, res: Response): Promise<voi
         const prodArray = [];
         for (let element of seller!.products!) {
             if (Products.instanceOfProduct(element)) {
-                let total = element!.ratings!.reduce((pv, cv) => pv + cv);
+                let total = (element!.ratings!.reduce((pv, cv) => pv + cv)) / element!.ratings!.length;
                 Object.assign(element, total);
                 prodArray.push(element);
             };

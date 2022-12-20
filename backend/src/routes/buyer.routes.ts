@@ -12,6 +12,6 @@ router.route("/comment/:productId").post(userProtect, commentOnProducts);
 router.route("/edit/:productId/:commentId").post(userProtect, editComments);
 router.route("/delete/:productId/:commentId").delete(userProtect, deleteComments);
 router.route("/clear/cart").delete(userProtect, clearCart);
-router.route("/delete/item/:cartId").delete(userProtect, deleteCartItems);
+router.route("/delete/item/:cartId").get(userProtect, deleteCartItems);
 
 export default router;

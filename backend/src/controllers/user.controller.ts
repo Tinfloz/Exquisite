@@ -70,7 +70,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
         });
         if (user && await user?.matchPassword(password)) {
             const loginUser = user.userType === "Buyer" ? await Buyers.findOne({ userId: user._id }).
-                select("cart address city province pincode") :
+                select("cart address city province pincode").populate("cart.product") :
                 await Sellers.findOne({ userid: user._id }).select("address city province pincode");
             const sendUser = {
                 email,

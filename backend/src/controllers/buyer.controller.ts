@@ -17,7 +17,7 @@ import { multiIdValidator } from "../helpers/multi.id.validator";
 const addItemsToCart = async (req: Request, res: Response): Promise<void> => {
     try {
         const { productId } = req.params;
-        const product = await Products.findById(productId).select("_id");
+        const product = await Products.findById(productId);
         console.log(product, "product")
         if (!mongoose.Types.ObjectId.isValid(productId)) {
             throw "id not valid"
@@ -33,7 +33,7 @@ const addItemsToCart = async (req: Request, res: Response): Promise<void> => {
             };
         };
         buyer!.cart!.push({
-            product: product?._id
+            product: product!
         });
         await buyer?.save();
         res.status(200).json({
@@ -406,12 +406,14 @@ const clearCart = async (req: Request, res: Response): Promise<void> => {
 const deleteCartItems = async (req: Request, res: Response): Promise<void> => {
     try {
         const { cartId } = req.params;
+        console.log(cartId, "cartIddd")
         if (!mongoose.Types.ObjectId.isValid(cartId)) {
             throw "id not valid";
         };
         const buyer = await Buyers.findOne({
             userId: req.user!._id
         }).populate("cart.product");
+        console.log(buyer, "buyerrr")
         for (let element of buyer!.cart!) {
             if (element!._id!.toString() === cartId) {
                 const index = buyer!.cart!.indexOf(element);
