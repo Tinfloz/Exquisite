@@ -1,3 +1,4 @@
+import { ICartElement } from "./auth.slice.interface";
 import { ValidationErrors } from "./redux.errors";
 
 export interface IProduct {
@@ -18,10 +19,11 @@ export interface IProductResponse {
     success: boolean,
     products?: Array<IProduct>
     product?: IProduct
+    cart?: ICartElement
 }
 
 export interface IProductInitialState {
-    product: Array<IProduct> | IProduct | null,
+    product: Array<IProduct> | IProduct | null | ICartElement,
     isLoading: boolean,
     isSuccess: boolean,
     isError: boolean,

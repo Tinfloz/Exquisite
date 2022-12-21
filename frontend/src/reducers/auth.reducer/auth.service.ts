@@ -1,6 +1,6 @@
 import axios from "axios";
 import { IUserCreds } from "../../interfaces/user.creds";
-import { IUser } from "../../interfaces/redux.interfaces/auth.slice.interface";
+import { IQty, IUser } from "../../interfaces/redux.interfaces/auth.slice.interface";
 import { ICartResponse } from "../../interfaces/redux.interfaces/auth.slice.interface";
 
 const API_URL = "http://localhost:5000/api/user"
@@ -33,11 +33,19 @@ const addIndividualItemsToCart = async (id: string, token: string): Promise<ICar
     };
     const response = await axios.get(API_BUYER_URL + `/add/item/${id}`, config);
     const user = JSON.parse(localStorage.getItem("user")!);
-    const newLoginUser = { ...user.loginUser, cart: response.data.cart };
+    const newLoginUser = {
+        ...user.sendUser.loginUser,
+        "cart": response.data.cart
+    };
+    const newSendUser = {
+        ...user.sendUser,
+        "loginUser": newLoginUser
+    };
     const newUser = {
         ...user,
-        loginUser: newLoginUser
-    };
+        sendUser: newSendUser
+    }
+    localStorage.setItem("user", JSON.stringify(newUser));
     localStorage.setItem("user", JSON.stringify(newUser));
     return response.data;
 };
@@ -51,8 +59,18 @@ const deleteIndividualCartItems = async (id: string, token: string): Promise<ICa
     };
     const response = await axios.get(API_BUYER_URL + `/delete/item/${id}`, config);
     const user = JSON.parse(localStorage.getItem("user")!);
-    const newLoginUser = { ...user.loginUser, cart: response.data.cart };
-    const newUser = { ...user, loginUser: newLoginUser };
+    const newLoginUser = {
+        ...user.sendUser.loginUser,
+        "cart": response.data.cart
+    };
+    const newSendUser = {
+        ...user.sendUser,
+        "loginUser": newLoginUser
+    };
+    const newUser = {
+        ...user,
+        sendUser: newSendUser
+    }
     localStorage.setItem("user", JSON.stringify(newUser));
     return response.data;
 };
@@ -66,18 +84,55 @@ const clearAllItems = async (token: string): Promise<ICartResponse> => {
     };
     const response = await axios.delete(API_BUYER_URL + `/clear/cart`, config);
     const user = JSON.parse(localStorage.getItem("user")!);
-    const newLoginUser = { ...user.loginUser, cart: [] };
-    const newUser = { ...user, loginUser: newLoginUser };
+    const newLoginUser = {
+        ...user.sendUser.loginUser,
+        "cart": []
+    };
+    const newSendUser = {
+        ...user.sendUser,
+        "loginUser": newLoginUser
+    };
+    const newUser = {
+        ...user,
+        sendUser: newSendUser
+    }
     localStorage.setItem("user", JSON.stringify(newUser));
     return response.data;
-}
+};
+
+// update qty in cart
+const updateProductQtyCart = async (cartId: (string | undefined), qty: IQty, token: string): Promise<ICartResponse> => {
+    const config = {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    };
+    const response = await axios.post(API_BUYER_URL + `/update/cart/${cartId}`, qty, config);
+    const user = JSON.parse(localStorage.getItem("user")!);
+    const newLoginUser = {
+        ...user.sendUser.loginUser,
+        "cart": response.data.cart!
+    };
+    const newSendUser = {
+        ...user.sendUser,
+        "loginUser": newLoginUser
+    };
+    const newUser = {
+        ...user,
+        "sendUser": newSendUser
+    };
+    localStorage.setItem("user", JSON.stringify(newUser));
+    return response.data;
+};
+
 
 const authService = {
     loginUser,
     registerUser,
     addIndividualItemsToCart,
     deleteIndividualCartItems,
-    clearAllItems
+    clearAllItems,
+    updateProductQtyCart
 };
 
 export default authService;

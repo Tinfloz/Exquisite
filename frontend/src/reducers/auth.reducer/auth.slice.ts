@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction, isAsyncThunkAction } from "@reduxjs/toolkit";
-import { IUser } from "../../interfaces/redux.interfaces/auth.slice.interface";
+import { IUpdateCartParam, IUser } from "../../interfaces/redux.interfaces/auth.slice.interface";
 import { IAuthInit, ICartResponse } from "../../interfaces/redux.interfaces/auth.slice.interface";
 import { IUserCreds } from "../../interfaces/user.creds";
 import { ValidationErrors } from "../../interfaces/redux.interfaces/redux.errors";
@@ -103,6 +103,25 @@ export const clearUserCart = createAsyncThunk<
     };
 });
 
+export const updateItemQtyInCart = createAsyncThunk<
+    ICartResponse,
+    IUpdateCartParam,
+    {
+        state: RootState,
+        rejectValue: ValidationErrors
+    }
+>("update/qty/cart", async (updateDetails, thunkAPI) => {
+    try {
+        const { cartId, quantity } = updateDetails;
+        const token = thunkAPI.getState().auth.user!.token;
+        return await authService.updateProductQtyCart(cartId, quantity, token)
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)
+            || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message)
+    };
+});
+
 const userSlice = createSlice({
     name: "auth",
     initialState,
@@ -186,6 +205,21 @@ const userSlice = createSlice({
                 state.isLoading = false;
                 state.isError = true;
                 state.message = payload!;
+            })
+            .addCase(updateItemQtyInCart.pending, state => {
+                state.isLoading = true;
+            })
+            .addCase(updateItemQtyInCart.fulfilled, (state, action: PayloadAction<ICartResponse>) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                let newLoginUser = { ...state.user!.loginUser, cart: action.payload.cart };
+                let newUser = { ...state.user!, loginUser: newLoginUser };
+                state.user = newUser;
+            })
+            .addCase(updateItemQtyInCart.rejected, (state, { payload }) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = payload!
             })
     }
 });

@@ -50,6 +50,26 @@ export const getIndProductsById = createAsyncThunk<
     };
 });
 
+// get all cart items user
+export const getAllUserItemsCart = createAsyncThunk<
+    IProductResponse,
+    void,
+    {
+        state: RootState,
+        rejectValue: ValidationErrors
+    }
+>("get/cart", async (_, thunkAPI) => {
+    try {
+        const token: string = thunkAPI.getState().auth.user!.token;
+        return await productService.getUserCartItems(token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)
+            || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message)
+    };
+});
+
+
 const productSlice = createSlice({
     name: "product",
     initialState,
@@ -84,6 +104,19 @@ const productSlice = createSlice({
                 state.isLoading = false;
             })
             .addCase(getIndProductsById.rejected, (state, { payload }) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = payload!
+            })
+            .addCase(getAllUserItemsCart.pending, state => {
+                state.isLoading = true;
+            })
+            .addCase(getAllUserItemsCart.fulfilled, (state, action: PayloadAction<IProductResponse>) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.product = action.payload.cart!
+            })
+            .addCase(getAllUserItemsCart.rejected, (state, { payload }) => {
                 state.isLoading = false;
                 state.isError = true;
                 state.message = payload!

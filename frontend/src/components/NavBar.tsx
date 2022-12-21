@@ -216,6 +216,7 @@ const NavBar: FC<INavBarProp> = ({ userProp }) => {
                                                                 <DrawerFooter>
                                                                     <HStack spacing="1.5vh">
                                                                         <Button variant='outline' mr="3"
+                                                                            disabled={userProp?.loginUser?.cart?.length === 0 ? true : false}
                                                                             onClick={async () => {
                                                                                 setCleared(true)
                                                                                 await dispatch(clearUserCart())
@@ -223,7 +224,11 @@ const NavBar: FC<INavBarProp> = ({ userProp }) => {
                                                                         >
                                                                             Clear cart
                                                                         </Button>
-                                                                        <Button disabled={userProp?.loginUser?.cart?.length === 0 ? true : false} bg="purple.300">
+                                                                        <Button disabled={userProp?.loginUser?.cart?.length === 0 ? true : false} bg="purple.300"
+                                                                            onClick={() => navigate(
+                                                                                "/cart/page"
+                                                                            )}
+                                                                        >
                                                                             Go to cart
                                                                         </Button>
                                                                     </HStack>

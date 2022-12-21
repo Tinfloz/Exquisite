@@ -65,7 +65,7 @@ const updateCart = async (req: Request, res: Response): Promise<void> => {
         };
         const buyer = await Buyers.findOne({
             userId: req.user!._id
-        });
+        }).populate("cart.product");
         buyer!.cart!.forEach(async element => {
             if (element!._id!.toString() === id) {
                 element.qty = result.data.qty;
@@ -139,14 +139,20 @@ const cartToOrder = async (req: Request, res: Response): Promise<void> => {
             salesTax,
             total: Number(total),
             buyer: buyer!._id
+        }).then(async (order) => {
+            let result = await Orders.findById(order._id).lean().populate({
+                path: "items.product",
+                options: {
+                    lean: true
+                }
+            })
+            res.status(200).json({
+                success: true,
+                result
+            });
         });
-        res.status(200).json({
-            success: true,
-            order
-        })
-        buyer?.orders?.push(order!._id);
-        await buyer!.save();
     } catch (error: any) {
+        console.log(error, "error")
         res.status(500).json({
             success: false,
             error: error.errors?.[0]?.message || error
@@ -205,12 +211,17 @@ const itemToOrder = async (req: Request, res: Response): Promise<void> => {
             salesTax,
             total,
             buyer: buyer!._id
-        });
-        buyer?.orders?.push(order!._id);
-        await buyer!.save();
-        res.status(200).json({
-            success: true,
-            order
+        }).then(async (order) => {
+            let result = await Orders.findById(order._id).lean().populate({
+                path: "items.product",
+                options: {
+                    lean: true
+                }
+            });
+            res.status(200).json({
+                success: true,
+                result
+            })
         })
     } catch (error: any) {
         if (error === "product not found") {
@@ -434,6 +445,24 @@ const deleteCartItems = async (req: Request, res: Response): Promise<void> => {
     };
 };
 
+// get all cart items 
+const getAllCartItems = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const buyer = await Buyers.findOne({
+            userId: req.user!._id
+        }).populate("cart.product");
+        res.status(200).json({
+            success: true,
+            cart: buyer!.cart!
+        })
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            error: error.errors?.[0]?.message || error
+        });
+    };
+};
+
 export {
     addItemsToCart,
     updateCart,
@@ -443,5 +472,6 @@ export {
     deleteComments,
     editComments,
     clearCart,
-    deleteCartItems
+    deleteCartItems,
+    getAllCartItems
 }

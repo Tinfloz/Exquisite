@@ -16,7 +16,7 @@ export interface Buyer extends mongoose.Document {
     province?: string;
     pincode?: string;
     cart?: Array<cart>;
-    orders?: (mongoose.Schema.Types.ObjectId | Order)[];
+    // orders?: (mongoose.Schema.Types.ObjectId | Order)[];
     latitude?: number;
     longitude?: number;
 };
@@ -60,12 +60,12 @@ const buyerSchema = new mongoose.Schema<Buyer, BuyerModel>({
             }
         }
     ],
-    orders: [
-        {
-            type: mongoose.Types.ObjectId,
-            ref: "Orders"
-        }
-    ]
+    // orders: [
+    //     {
+    //         type: mongoose.Types.ObjectId,
+    //         ref: "Orders"
+    //     }
+    // ]
 }, { timestamps: true });
 
 buyerSchema.statics.instanceOfBuyer = (param: any): param is Buyer => {

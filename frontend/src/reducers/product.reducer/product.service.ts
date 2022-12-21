@@ -2,6 +2,7 @@ import axios from "axios";
 import { IProduct, IProductResponse } from "../../interfaces/redux.interfaces/product.interfaces";
 
 const API_URL = "http://localhost:5000/api/product"
+const API_BUYER_URL = "http://localhost:5000/api/buyer"
 
 // get all products
 const getAllProducts = async (token: string): Promise<IProductResponse> => {
@@ -26,11 +27,21 @@ const getIndividualProduct = async (token: string, id: string): Promise<IProduct
     return response.data;
 };
 
-
+// get all cart items 
+const getUserCartItems = async (token: string): Promise<IProductResponse> => {
+    const config = {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    };
+    const response = await axios.get(API_BUYER_URL + "/get/all/items", config);
+    return response.data;
+};
 
 const productService = {
     getIndividualProduct,
-    getAllProducts
+    getAllProducts,
+    getUserCartItems
 };
 
 export default productService;

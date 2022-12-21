@@ -30,4 +30,15 @@ export interface ICartResponse {
     success: boolean
     cart?: Array<ICartElement>
     message?: string
-}
+};
+
+export interface IQty {
+    qty: number
+};
+
+export interface IUpdateCartParam {
+    cartId: string | undefined,
+    quantity: {
+        qty: number
+    }
+};

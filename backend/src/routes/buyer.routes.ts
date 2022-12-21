@@ -1,5 +1,5 @@
 import express from "express";
-import { addItemsToCart, cartToOrder, clearCart, commentOnProducts, deleteCartItems, deleteComments, editComments, itemToOrder, updateCart } from "../controllers/buyer.controller";
+import { addItemsToCart, cartToOrder, clearCart, commentOnProducts, deleteCartItems, deleteComments, editComments, getAllCartItems, itemToOrder, updateCart } from "../controllers/buyer.controller";
 import { userProtect } from "../middlewares/auth.middleware";
 
 const router = express.Router();
@@ -13,5 +13,6 @@ router.route("/edit/:productId/:commentId").post(userProtect, editComments);
 router.route("/delete/:productId/:commentId").delete(userProtect, deleteComments);
 router.route("/clear/cart").delete(userProtect, clearCart);
 router.route("/delete/item/:cartId").get(userProtect, deleteCartItems);
+router.route("/get/all/items").get(userProtect, getAllCartItems)
 
 export default router;

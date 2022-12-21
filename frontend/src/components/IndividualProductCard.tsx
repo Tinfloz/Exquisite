@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useEffect, useState, useRef } from 'react'
 import { IProduct } from '../interfaces/redux.interfaces/product.interfaces';
 import {
     Card, CardHeader, CardBody, CardFooter, Button, Image, Text, Stack, Heading, Divider,
@@ -6,28 +6,60 @@ import {
     HStack, Select
 } from '@chakra-ui/react'
 import { useAppDispatch } from '../typed.hooks/hooks';
-import { addItemsToCartById, resetUserHelpers } from '../reducers/auth.reducer/auth.slice';
+import { addItemsToCartById, resetUserHelpers, updateItemQtyInCart } from '../reducers/auth.reducer/auth.slice';
+import { useNavigate } from "react-router-dom";
 
 interface ICardProp {
     cart: boolean,
     indProdPage: boolean,
-    product: IProduct
+    product: IProduct,
+    cartId?: string
 }
 
 interface IQuantity {
     qty: number
 }
 
-const IndividualProductCard: FC<ICardProp> = ({ cart, product, indProdPage }) => {
+const IndividualProductCard: FC<ICardProp> = ({ cart, product, indProdPage, cartId }) => {
+
+    console.log("child reremders")
 
     let rows = [], i = 0, len = 10;
     while (++i <= len) rows.push(i);
 
+    const navigate = useNavigate();
+
+    const firstRenderRef = useRef(true)
+
     const [quantity, setQuantity] = useState<IQuantity>({
         qty: 1
-    })
+    });
+
 
     const dispatch = useAppDispatch();
+
+    useEffect(() => {
+        if (!indProdPage) {
+            return
+        } else {
+            if (!cart) {
+                return
+            };
+            if (firstRenderRef.current) {
+                firstRenderRef.current = false;
+                return
+            };
+            let updateDetails = {
+                cartId,
+                quantity,
+            };
+            (async () => {
+                await dispatch(updateItemQtyInCart(updateDetails));
+                dispatch(resetUserHelpers());
+            })()
+            console.log("child")
+        }
+    }, [JSON.stringify(quantity)])
 
     return (
         <>
@@ -44,7 +76,7 @@ const IndividualProductCard: FC<ICardProp> = ({ cart, product, indProdPage }) =>
                             {product.description}
                         </Text>
                         <Text color='blue.600' fontSize='2xl'>
-                            $450
+                            ${product.price}
                         </Text>
                     </Stack>
                 </CardBody>
@@ -54,7 +86,11 @@ const IndividualProductCard: FC<ICardProp> = ({ cart, product, indProdPage }) =>
                         !indProdPage ?
                             (
                                 <ButtonGroup spacing='2'>
-                                    <Button variant='solid' colorScheme='blue'>
+                                    <Button variant='solid' colorScheme='blue'
+                                        onClick={() => {
+                                            navigate(`/product/${product._id}`)
+                                        }}
+                                    >
                                         Buy now
                                     </Button>
                                     <Button variant='ghost' colorScheme='blue'
@@ -85,8 +121,8 @@ const IndividualProductCard: FC<ICardProp> = ({ cart, product, indProdPage }) =>
                                     </>
                                 ) : (
                                     <>
-                                        <HStack>
-                                            <Button colorScheme="blue.300">
+                                        <HStack spacing="3vh">
+                                            <Button>
                                                 Order
                                             </Button>
                                             <Select variant='flushed' placeholder='Quantity' value={quantity.qty}

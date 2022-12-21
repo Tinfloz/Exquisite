@@ -1,9 +1,10 @@
-import { Divider, Flex, Spinner, Text, Stack, HStack } from '@chakra-ui/react'
-import React, { FC, useEffect } from 'react'
+import { Divider, Flex, Spinner, Text, Stack, HStack, Grid, GridItem, Box, Avatar, VStack } from '@chakra-ui/react'
+import React, { FC, useEffect, useState } from 'react'
 import IndividualProductCard from '../components/IndividualProductCard'
+import { ICartElement } from '../interfaces/redux.interfaces/auth.slice.interface';
 import { IProduct } from '../interfaces/redux.interfaces/product.interfaces';
-import { getIndProductsById, resetProductHelpers } from "../reducers/product.reducer/product.slice";
-import { useAppSelector } from "../typed.hooks/hooks"
+import { getAllUserItemsCart, getIndProductsById, resetProductHelpers, resetProducts } from "../reducers/product.reducer/product.slice";
+import { useAppSelector, useAppDispatch } from "../typed.hooks/hooks"
 
 interface IProductPageProps {
     cart: boolean
@@ -12,6 +13,10 @@ interface IProductPageProps {
 const ProductPage: FC<IProductPageProps> = ({ cart }) => {
 
     const { product } = useAppSelector(state => state.products);
+    const { user } = useAppSelector(state => state.auth);
+    const [total, setTotal] = useState<number>(0);
+    console.log("parent renders")
+    const dispatch = useAppDispatch();
 
     let id: string;
 
@@ -22,16 +27,57 @@ const ProductPage: FC<IProductPageProps> = ({ cart }) => {
 
     const instanceOfProduct = (param: any): param is IProduct => {
         return param.price !== undefined
-    }
+    };
+
+    const instanceOfCartElementArray = (param: any): param is Array<ICartElement> => {
+        return param.length !== 0 && param[0].product !== undefined
+    };
+
+    useEffect(() => {
+        if (cart) {
+            return
+        }
+        (async () => {
+            await dispatch(getIndProductsById(id));
+            dispatch(resetProductHelpers())
+        })()
+    }, [dispatch])
 
     useEffect(() => {
         if (!cart) {
             return
         }
         (async () => {
-            getIndProductsById(id)
+            await dispatch(getAllUserItemsCart());
+            dispatch(resetProductHelpers())
         })()
-    }, [])
+        console.log("parent")
+    }, [dispatch, JSON.stringify(user)])
+
+    useEffect(() => {
+        if (!cart) {
+            return
+        };
+        if (!product) {
+            return
+        };
+        setTotal(((): number => {
+            if (instanceOfCartElementArray(product)) {
+                let sum = 0;
+                for (let element of product) {
+                    sum += (element.product.price * element.qty)
+                }
+                return sum
+            }
+            return 0
+        })())
+    }, [JSON.stringify(product)])
+
+    useEffect(() => {
+        return () => {
+            dispatch(resetProducts())
+        }
+    }, [dispatch])
 
     if (!product) {
         return (
@@ -62,7 +108,7 @@ const ProductPage: FC<IProductPageProps> = ({ cart }) => {
                         <Flex
                             justify="center"
                             alignItems="center"
-                            p="10vh"
+                            p="4vh"
                         >
                             {
                                 instanceOfProduct(product) ?
@@ -96,7 +142,7 @@ const ProductPage: FC<IProductPageProps> = ({ cart }) => {
                                                             fontSize="4vh"
                                                             color="gray.400"
                                                         >
-                                                            There are no review on this product
+                                                            There are no reviews on this product
                                                         </Text>
                                                     </Flex>
                                                 </>
@@ -128,6 +174,100 @@ const ProductPage: FC<IProductPageProps> = ({ cart }) => {
                     </>
                 ) : (
                     <>
+                        <HStack>
+                            <Flex
+                                w="60%"
+                                h="100vh"
+                                p="3vh"
+                            >
+                                {
+                                    instanceOfCartElementArray(product) ? (
+                                        <>
+                                            {product?.map(element => (
+                                                <Grid
+                                                    h="20vh"
+                                                    templateRows={`repeat(${product?.length}, 1)`}
+                                                    gap="4"
+                                                >
+                                                    <GridItem display="flex"
+                                                        justifyContent="center">
+                                                        <IndividualProductCard
+                                                            cart={true}
+                                                            indProdPage={true}
+                                                            product={element.product}
+                                                            cartId={element._id}
+                                                        />
+                                                    </GridItem>
+                                                </Grid>
+                                            ))}
+                                        </>
+                                    )
+                                        : (
+                                            <>
+                                                <Text
+                                                    as="b"
+                                                    fontSize="4vh"
+                                                    color="gray.400"
+                                                >
+                                                    There are no products in your cart
+                                                </Text>
+                                            </>
+                                        )
+                                }
+                            </Flex>
+                            <Flex
+                                h="100vh"
+                                w="40%"
+                                justify="center"
+                                alignItems="center"
+                            >
+                                <Box
+                                    h="55vh"
+                                    w="55vh"
+                                    borderWidth="1px"
+                                    borderColor="gray.300"
+                                >
+                                    <Flex
+                                        justify="center"
+                                        p="2vh"
+                                    >
+                                        <Text
+                                            fontSize="3vh"
+                                            as="b"
+                                        >
+                                            Order Summary
+                                        </Text>
+                                    </Flex>
+                                    <Flex>
+                                        <Stack direction="column" ml="5vh" spacing="3vh">
+                                            {
+                                                instanceOfCartElementArray(product) ? (
+                                                    <>
+                                                        {
+                                                            product?.map(element => (
+                                                                <HStack spacing="3vh">
+                                                                    <Avatar
+                                                                        src={element?.product?.image}
+                                                                        name={element?.product?.item}
+                                                                        size="md"
+                                                                    />
+                                                                    <Text>{element?.product?.item}</Text>
+                                                                    <Text>x{element.qty}</Text>
+                                                                    <Text>{element?.product?.price}</Text>
+                                                                </HStack>
+                                                            ))
+                                                        }
+                                                    </>
+                                                ) : (
+                                                    null
+                                                )
+                                            }
+                                            <Text><strong>Subtotal: </strong>{total}</Text>
+                                        </Stack>
+                                    </Flex>
+                                </Box>
+                            </Flex>
+                        </HStack>
                     </>
                 )
             }
