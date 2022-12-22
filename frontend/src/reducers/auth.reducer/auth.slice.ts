@@ -1,10 +1,12 @@
-import { createSlice, createAsyncThunk, PayloadAction, isAsyncThunkAction } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction, current } from "@reduxjs/toolkit";
 import { IUpdateCartParam, IUser } from "../../interfaces/redux.interfaces/auth.slice.interface";
 import { IAuthInit, ICartResponse } from "../../interfaces/redux.interfaces/auth.slice.interface";
 import { IUserCreds } from "../../interfaces/user.creds";
 import { ValidationErrors } from "../../interfaces/redux.interfaces/redux.errors";
 import authService from "./auth.service";
 import { RootState } from "../../store";
+import { ISellerCreateProductParam, ISellerResponse } from "../../interfaces/redux.interfaces/seller.slice.interface";
+import { IProduct } from "../../interfaces/redux.interfaces/product.interfaces";
 
 const user = JSON.parse(localStorage.getItem("user")!);
 
@@ -85,6 +87,25 @@ export const deleteIndividualItemsById = createAsyncThunk<
     };
 });
 
+// create new products sellers
+export const createSellerNewProducts = createAsyncThunk<
+    ISellerResponse,
+    ISellerCreateProductParam,
+    {
+        state: RootState,
+        rejectValue: ValidationErrors
+    }
+>("seller/new/product", async (prodDetails, thunkAPI) => {
+    try {
+        const token: string = thunkAPI.getState().auth.user!.token;
+        return authService.createNewProductsSeller(prodDetails, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)
+            || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message)
+    };
+});
+
 export const clearUserCart = createAsyncThunk<
     ICartResponse,
     void,
@@ -115,6 +136,25 @@ export const updateItemQtyInCart = createAsyncThunk<
         const { cartId, quantity } = updateDetails;
         const token = thunkAPI.getState().auth.user!.token;
         return await authService.updateProductQtyCart(cartId, quantity, token)
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)
+            || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message)
+    };
+});
+
+// delete products 
+export const deleteProductsSeller = createAsyncThunk<
+    ISellerResponse,
+    string,
+    {
+        state: RootState,
+        rejectValue: ValidationErrors
+    }
+>("delete/product", async (id, thunkAPI) => {
+    try {
+        const token: string = thunkAPI.getState().auth.user!.token;
+        return await authService.deleteSellerProducts(id, token);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message)
             || error.message || error.toString();
@@ -221,6 +261,51 @@ const userSlice = createSlice({
                 state.isError = true;
                 state.message = payload!
             })
+            .addCase(createSellerNewProducts.pending, state => {
+                state.isLoading = true;
+            })
+            .addCase(createSellerNewProducts.fulfilled, (state, action: PayloadAction<ISellerResponse>) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                const newProducts = [...state.user!.loginUser.products, action.payload!.product];
+                const newLoginUser = {
+                    ...state.user!.loginUser,
+                    products: newProducts
+                };
+                const newUser = {
+                    ...state.user!,
+                    loginUser: newLoginUser
+                };
+                state.user = newUser;
+            })
+            .addCase(createSellerNewProducts.rejected, (state, { payload }) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = payload!
+            })
+            .addCase(deleteProductsSeller.pending, state => {
+                state.isLoading = true;
+            })
+            .addCase(deleteProductsSeller.fulfilled, (state, action: PayloadAction<ISellerResponse>) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                const newArrayProducts = state.user!.loginUser.products.filter((element: IProduct) => element._id !== action.payload.producId);
+                const newLoginUser = {
+                    ...state.user!.loginUser,
+                    products: newArrayProducts
+                };
+                const newUser = {
+                    ...state.user!,
+                    loginUser: newLoginUser
+                };
+                state.user = newUser
+            })
+            .addCase(deleteProductsSeller.rejected, (state, { payload }) => {
+                state.isError = true;
+                state.isLoading = false;
+                state.message = payload!
+            })
+
     }
 });
 

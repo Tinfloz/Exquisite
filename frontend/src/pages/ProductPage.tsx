@@ -1,10 +1,11 @@
-import { Divider, Flex, Spinner, Text, Stack, HStack, Grid, GridItem, Box, Avatar, VStack } from '@chakra-ui/react'
+import { Divider, Flex, Spinner, Text, Stack, HStack, Grid, GridItem, Box, Avatar, VStack, Button } from '@chakra-ui/react'
 import React, { FC, useEffect, useState } from 'react'
 import IndividualProductCard from '../components/IndividualProductCard'
 import { ICartElement } from '../interfaces/redux.interfaces/auth.slice.interface';
 import { IProduct } from '../interfaces/redux.interfaces/product.interfaces';
 import { getAllUserItemsCart, getIndProductsById, resetProductHelpers, resetProducts } from "../reducers/product.reducer/product.slice";
-import { useAppSelector, useAppDispatch } from "../typed.hooks/hooks"
+import { useAppSelector, useAppDispatch } from "../typed.hooks/hooks";
+import { useNavigate } from "react-router-dom";
 
 interface IProductPageProps {
     cart: boolean
@@ -15,7 +16,7 @@ const ProductPage: FC<IProductPageProps> = ({ cart }) => {
     const { product } = useAppSelector(state => state.products);
     const { user } = useAppSelector(state => state.auth);
     const [total, setTotal] = useState<number>(0);
-    console.log("parent renders")
+    const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
     let id: string;
@@ -264,6 +265,19 @@ const ProductPage: FC<IProductPageProps> = ({ cart }) => {
                                             }
                                             <Text><strong>Subtotal: </strong>{total}</Text>
                                         </Stack>
+                                    </Flex>
+                                    <Flex
+                                        justify="center"
+                                        pt="3vh"
+                                    >
+                                        <Button
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                navigate("/checkout")
+                                            }}
+                                        >
+                                            Place Order
+                                        </Button>
                                     </Flex>
                                 </Box>
                             </Flex>

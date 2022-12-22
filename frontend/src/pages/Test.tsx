@@ -1,5 +1,5 @@
 import { Flex, HStack, Spinner, Text, Box } from '@chakra-ui/react'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import IndividualProductCard from '../components/IndividualProductCard';
 import { ICartElement } from '../interfaces/redux.interfaces/auth.slice.interface';
 import { IProduct } from '../interfaces/redux.interfaces/product.interfaces';
@@ -14,10 +14,16 @@ const Test = () => {
     const [total, setTotal] = useState<number>(0);
 
     const instanceOfCartElement = (param: any): param is Array<ICartElement> => {
-        return param[0].product !== undefined;
+        return param.length !== 0 && param[0].product !== undefined;
     };
 
+    const firstRenderRef = useRef(true)
+
     useEffect(() => {
+        if (firstRenderRef.current) {
+            firstRenderRef.current = false;
+            return
+        }
         console.log("hello user")
     }, [JSON.stringify(user)])
 

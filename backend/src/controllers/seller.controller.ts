@@ -13,6 +13,7 @@ import Users from "../models/all.user.model";
 // create a new product
 const createProduct = async (req: Request, res: Response): Promise<void> => {
     try {
+        console.log(req.body)
         const result = productZodSchema.safeParse(req.body);
         if (!result.success) {
             res.status(400).json({
@@ -112,6 +113,7 @@ const deleteProduct = async (req: Request, res: Response): Promise<void> => {
         if (!mongoose.Types.ObjectId.isValid(id)) {
             throw "id not valid"
         };
+        console.log(id, "idddd")
         const seller = await Sellers.findOne({
             userId: req.user!._id
         });
@@ -256,3 +258,4 @@ export {
     getAllOrders,
     markDelivered
 };
+

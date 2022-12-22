@@ -30,3 +30,10 @@ export interface IOrderInit {
     isError: boolean,
     message: ValidationErrors | string
 };
+
+export interface IOrderSingleItemParam {
+    id: string,
+    quantity: {
+        qty: number
+    }
+};

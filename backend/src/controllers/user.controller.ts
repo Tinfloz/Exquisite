@@ -68,10 +68,11 @@ const login = async (req: Request, res: Response): Promise<void> => {
         const user = await Users.findOne({
             email
         });
+        console.log(user!._id, "user")
         if (user && await user?.matchPassword(password)) {
             const loginUser = user.userType === "Buyer" ? await Buyers.findOne({ userId: user._id }).
                 select("cart address city province pincode").populate("cart.product") :
-                await Sellers.findOne({ userid: user._id }).select("address city province pincode");
+                await Sellers.findOne({ userId: user._id }).select("address city province pincode products").populate("products");
             const sendUser = {
                 email,
                 userType: user.userType,
@@ -79,6 +80,7 @@ const login = async (req: Request, res: Response): Promise<void> => {
                 token: getToken(user._id),
                 loginUser
             };
+            console.log("loginUser", loginUser)
             res.status(200).json({
                 sendUser
             })

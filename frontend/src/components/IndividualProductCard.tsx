@@ -122,7 +122,12 @@ const IndividualProductCard: FC<ICardProp> = ({ cart, product, indProdPage, cart
                                 ) : (
                                     <>
                                         <HStack spacing="3vh">
-                                            <Button>
+                                            <Button
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    navigate(`/checkout/${product._id}/${quantity.qty}`)
+                                                }}
+                                            >
                                                 Order
                                             </Button>
                                             <Select variant='flushed' placeholder='Quantity' value={quantity.qty}

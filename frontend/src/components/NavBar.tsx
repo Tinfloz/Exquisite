@@ -21,6 +21,7 @@ import {
 import { ICartElement, ISendUser } from '../interfaces/redux.interfaces/auth.slice.interface';
 import logo from "../assets/logo.jpeg"
 import { AiOutlineSearch, AiOutlineShoppingCart, AiOutlineDelete } from "react-icons/ai";
+import { RiAccountCircleLine } from "react-icons/ri"
 import { useNavigate, Link } from "react-router-dom";
 import { clearUserCart, deleteIndividualItemsById, logout, reset, resetUserHelpers } from "../reducers/auth.reducer/auth.slice";
 import { useAppDispatch, useAppSelector } from "../typed.hooks/hooks";
@@ -89,7 +90,7 @@ const NavBar: FC<INavBarProp> = ({ userProp }) => {
             <Flex
                 bg="green.800"
             >
-                <HStack spacing={userProp ? (userProp.userType === "Buyer" ? "10vh" : "90vh") : ("145vh")}>
+                <HStack spacing={userProp ? (userProp.userType === "Buyer" ? "10vh" : "145vh") : ("145vh")}>
                     <Link to={!userProp ? "/" : "/home"}>
                         <Image
                             src={logo}
@@ -243,18 +244,51 @@ const NavBar: FC<INavBarProp> = ({ userProp }) => {
                                     ) :
                                         (
                                             <>
-                                                <Box>
-                                                    <Button
-                                                        onClick={() => {
-                                                            dispatch(logout());
-                                                            dispatch(reset());
-                                                            setToLogout(true);
-                                                            navigate("/");
-                                                        }}
+                                                <HStack>
+                                                    <Box>
+                                                        <Button
+                                                            onClick={() => {
+                                                                dispatch(logout());
+                                                                dispatch(reset());
+                                                                setToLogout(true);
+                                                                navigate("/");
+                                                            }}
+                                                        >
+                                                            Logout
+                                                        </Button>
+                                                    </Box>
+                                                    <IconButton
+                                                        aria-label="Account"
+                                                        icon={<RiAccountCircleLine size="s" color=" white" />}
+                                                        bg="green.800"
+                                                        _hover={{ bg: "green.800" }}
+                                                        onClick={onOpen}
+                                                    />
+                                                    <Drawer
+                                                        isOpen={isOpen}
+                                                        placement='right'
+                                                        onClose={onClose}
+                                                        finalFocusRef={btnRef}
                                                     >
-                                                        Logout
-                                                    </Button>
-                                                </Box>
+                                                        <DrawerContent>
+                                                            <DrawerCloseButton />
+                                                            <DrawerHeader>Menu</DrawerHeader>
+                                                            <DrawerBody>
+                                                                <Text
+                                                                    as="button"
+                                                                    onClick={() => navigate("/my/products")}
+                                                                >
+                                                                    My Products
+                                                                </Text>
+                                                            </DrawerBody>
+                                                            <DrawerFooter>
+                                                                <Button variant='outline' mr={3} onClick={onClose}>
+                                                                    Cancel
+                                                                </Button>
+                                                            </DrawerFooter>
+                                                        </DrawerContent>
+                                                    </Drawer>
+                                                </HStack>
                                             </>
                                         )
                                 }

@@ -5,9 +5,12 @@ import {
 import './App.css';
 import NavBar from './components/NavBar';
 import UserCreds from './components/UserCreds';
+import CheckoutPage from './pages/CheckoutPage';
+import CreateProduct from './pages/CreateProduct';
 import HomePage from './pages/HomePage';
 import Landing from './pages/Landing';
 import LoginSeller from './pages/LoginSeller';
+import MyProducts from './pages/MyProducts';
 import ProductPage from './pages/ProductPage';
 import RegisterClient from './pages/RegisterClient';
 import RegisterSeller from './pages/RegisterSeller';
@@ -31,6 +34,10 @@ const App: FC = () => {
           <Route path="/test" element={<Test />} />
           <Route path="/product/:id" element={<ProductPage cart={false} />} />
           <Route path="/cart/page" element={<ProductPage cart={true} />} />
+          <Route path="/checkout/:productId/:qty" element={<CheckoutPage cart={false} />} />
+          <Route path="/checkout" element={<CheckoutPage cart={true} />} />
+          <Route path="/create/product" element={<CreateProduct />} />
+          <Route path="/my/products" element={<MyProducts />} />
           <Route path="/" element={<Landing />} />
         </Routes>
       </div>

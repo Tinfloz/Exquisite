@@ -1,7 +1,7 @@
 import React, { FC, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../typed.hooks/hooks';
 import IndividualProductCard from '../components/IndividualProductCard';
-import { Flex, Grid, GridItem, Spinner, Text } from '@chakra-ui/react';
+import { Flex, Grid, GridItem, Spinner, Text, VStack } from '@chakra-ui/react';
 import { IProduct } from '../interfaces/redux.interfaces/product.interfaces';
 import { getAllHomeProducts, resetProductHelpers, resetProducts } from '../reducers/product.reducer/product.slice';
 import SellerHomeCard from '../components/SellerHomeCard';
@@ -125,12 +125,14 @@ const SellerHome: FC = () => {
                 justify="center"
                 p="10vh"
             >
-                <SellerHomeCard heading={"Upload a Product"} text={"Upload new products and sell them!"}
-                    buttonText={"Upload"} />
-                <SellerHomeCard heading={"Check Orders"} text={"Check orders that are to be delivered"}
-                    buttonText={"Go"} />
-                <SellerHomeCard heading={"Change account info"} text={"Change address and other details"}
-                    buttonText={"Go"} />
+                <VStack>
+                    <SellerHomeCard heading={"Upload a Product"} text={"Upload new products and sell them!"}
+                        buttonText={"Upload"} nav={"/create/product"} />
+                    <SellerHomeCard heading={"Check Orders"} text={"Check orders that are to be delivered"}
+                        buttonText={"Go"} nav={"#"} />
+                    <SellerHomeCard heading={"Change account info"} text={"Change address and other details"}
+                        buttonText={"Go"} nav={"#"} />
+                </VStack>
             </Flex>
         </>
     )
