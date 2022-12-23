@@ -8,7 +8,10 @@ import Buyers from "../models/buyer.model";
 import { multiIdValidator } from "../helpers/multi.id.validator";
 import { sendEmail } from "../utils/send.email";
 import Users from "../models/all.user.model";
+import * as Redis from "redis";
 
+const redisClient = Redis.createClient();
+redisClient.connect();
 
 // create a new product
 const createProduct = async (req: Request, res: Response): Promise<void> => {
@@ -154,48 +157,63 @@ const getAllOrders = async (req: Request, res: Response): Promise<void> => {
     try {
         const seller = await Sellers.findOne({
             userId: req.user!._id
-        });
-        interface IOrderItem {
-            address: string,
-            city: string,
-            province: string,
-            pincode: string,
-            orderId: mongoose.Schema.Types.ObjectId,
-            product: string,
-            productId: mongoose.Schema.Types.ObjectId,
-            qty: number
-        };
-        let ordersArray: Array<IOrderItem> = [];
-        for await (let order of Orders.find().populate("buyer")) {
-            if (order.isPaid) {
-                console.log(order)
-                for (let element of order.items) {
-                    if (!element.delivered && (element.seller.toString() === seller!._id.toString())) {
-                        let orderItem = {} as IOrderItem;
-                        if (Buyers.instanceOfBuyer(order!.buyer!)) {
-                            Object.assign(orderItem, {
-                                address: order!.buyer!.address,
-                                city: order!.buyer!.city,
-                                province: order!.buyer!.province,
-                                pincode: order!.buyer!.province,
-                            })
-                        } else {
-                            throw "interface error"
+        }).populate("userId");
+        if (Users.instanceOfUser(seller!.userId)) {
+            const data = await redisClient.get(seller!.userId.name);
+            if (data) {
+                res.status(200).json({
+                    success: true,
+                    ordersArray: JSON.parse(data)
+                })
+            } else {
+                interface IOrders {
+                    orderId: string,
+                    productId: string,
+                    item: string,
+                    qty: number,
+                    address: string,
+                    city: string,
+                    province: string,
+                    pincode: string
+                }
+                const ordersArray: Array<IOrders> = [];
+                for await (let order of Orders.find().populate("items.product buyer")) {
+                    if (order.isPaid) {
+                        for (let element of order.items) {
+                            if (element.seller.toString() === seller!._id.toString()
+                                && !element.delivered) {
+                                let orderDetails = {
+                                    orderId: order._id,
+                                    qty: element.qty
+                                } as IOrders
+                                if (Products.instanceOfProduct(element.product)) {
+                                    Object.assign(orderDetails, {
+                                        item: element.product.item,
+                                        productId: element.product._id
+                                    })
+                                } else {
+                                    throw "interface error"
+                                }
+                                if (Buyers.instanceOfBuyer(order.buyer)) {
+                                    Object.assign(orderDetails, {
+                                        address: order.buyer.address,
+                                        city: order.buyer.city,
+                                        province: order.buyer.province,
+                                        pincode: order.buyer.pincode
+                                    });
+                                    ordersArray.push(orderDetails);
+                                };
+                            };
                         };
-                        orderItem = {
-                            ...orderItem, orderId: order!._id,
-                            productId: !Products.instanceOfProduct(element.product) ? element.product : element.product._id,
-                            qty: element.qty
-                        };
-                        ordersArray.push(orderItem);
                     };
                 };
+                redisClient.setEx(seller!.userId!.name, 1800, JSON.stringify(ordersArray));
+                res.status(200).json({
+                    success: true,
+                    ordersArray
+                });
             };
         };
-        res.status(200).json({
-            success: true,
-            ordersArray
-        })
     } catch (error: any) {
         console.log(error)
         res.status(500).json({

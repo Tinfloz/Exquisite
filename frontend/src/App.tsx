@@ -7,6 +7,7 @@ import NavBar from './components/NavBar';
 import UserCreds from './components/UserCreds';
 import CheckoutPage from './pages/CheckoutPage';
 import CreateProduct from './pages/CreateProduct';
+import GetDeliveries from './pages/GetDeliveries';
 import HomePage from './pages/HomePage';
 import Landing from './pages/Landing';
 import LoginSeller from './pages/LoginSeller';
@@ -38,6 +39,7 @@ const App: FC = () => {
           <Route path="/checkout" element={<CheckoutPage cart={true} />} />
           <Route path="/create/product" element={<CreateProduct />} />
           <Route path="/my/products" element={<MyProducts />} />
+          <Route path="/my/orders" element={<GetDeliveries />} />
           <Route path="/" element={<Landing />} />
         </Routes>
       </div>

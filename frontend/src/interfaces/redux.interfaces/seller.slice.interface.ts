@@ -22,3 +22,27 @@ export interface ISellerInit {
     isError: boolean,
     message: ValidationErrors | string
 };
+
+export interface ISingleMyOrder {
+    orderId: string,
+    qty: number,
+    item: string,
+    productId: string,
+    address: string,
+    city: string,
+    province: string,
+    pincode: string
+};
+
+export interface IMyOrdersResponse {
+    success: boolean,
+    ordersArray: Array<ISingleMyOrder>
+};
+
+export interface ISellerSliceOrdersInit {
+    orderStack: Array<ISingleMyOrder> | null,
+    isLoading: boolean,
+    isSuccess: boolean,
+    isError: boolean,
+    message: string | ValidationErrors
+}

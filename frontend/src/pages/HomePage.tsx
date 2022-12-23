@@ -129,7 +129,7 @@ const SellerHome: FC = () => {
                     <SellerHomeCard heading={"Upload a Product"} text={"Upload new products and sell them!"}
                         buttonText={"Upload"} nav={"/create/product"} />
                     <SellerHomeCard heading={"Check Orders"} text={"Check orders that are to be delivered"}
-                        buttonText={"Go"} nav={"#"} />
+                        buttonText={"Go"} nav={"/my/orders"} />
                     <SellerHomeCard heading={"Change account info"} text={"Change address and other details"}
                         buttonText={"Go"} nav={"#"} />
                 </VStack>
