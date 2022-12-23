@@ -1,11 +1,12 @@
-import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, current, PayloadAction } from "@reduxjs/toolkit";
 import { ValidationErrors } from "../../interfaces/redux.interfaces/redux.errors";
-import { IMyOrdersResponse, ISellerSliceOrdersInit } from "../../interfaces/redux.interfaces/seller.slice.interface";
+import { IMyOrdersResponse, IParamGetProductOrder, ISellerSliceOrdersInit } from "../../interfaces/redux.interfaces/seller.slice.interface";
 import { RootState } from "../../store";
 import sellerService from "./seller.service";
 
 const initialState: ISellerSliceOrdersInit = {
     orderStack: null,
+    orderedProduct: null,
     isLoading: false,
     isSuccess: false,
     isError: false,
@@ -31,6 +32,46 @@ export const getAllSellerOrders = createAsyncThunk<
     };
 });
 
+// get my order and product 
+export const getMyProductsAndOrders = createAsyncThunk<
+    IMyOrdersResponse,
+    IParamGetProductOrder,
+    {
+        state: RootState,
+        rejectValue: ValidationErrors
+    }
+>("get/order/product", async (productDetails, thunkAPI) => {
+    try {
+        const { orderId, productId } = productDetails;
+        const token = thunkAPI.getState().auth.user!.token;
+        return await sellerService.getMyOrderAndProduct(orderId!, productId!, token)
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)
+            || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message)
+    };
+});
+
+// mark delivered
+export const markSellerOrdersDelivered = createAsyncThunk<
+    IMyOrdersResponse,
+    IParamGetProductOrder,
+    {
+        state: RootState,
+        rejectValue: ValidationErrors
+    }
+>("mark/delivered", async (deliveryDetails, thunkAPI) => {
+    try {
+        const { orderId, productId } = deliveryDetails
+        const token = thunkAPI.getState().auth.user!.token;
+        return await sellerService.markOrdersDeliveredSeller(orderId, productId, token)
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)
+            || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message)
+    };
+});
+
 const sellerSlice = createSlice({
     name: "seller",
     initialState,
@@ -38,7 +79,8 @@ const sellerSlice = createSlice({
         resetSeller: state => initialState,
         resetSellerHelpers: state => ({
             ...initialState,
-            orderStack: state.orderStack
+            orderStack: state.orderStack,
+            orderedProduct: state.orderedProduct
         })
     },
     extraReducers: builder => {
@@ -49,11 +91,37 @@ const sellerSlice = createSlice({
             .addCase(getAllSellerOrders.fulfilled, (state, action: PayloadAction<IMyOrdersResponse>) => {
                 state.isSuccess = true;
                 state.isLoading = false;
-                state.orderStack = action.payload.ordersArray
+                state.orderStack = action.payload.ordersArray!
             })
             .addCase(getAllSellerOrders.rejected, (state, { payload }) => {
                 state.isLoading = false;
                 state.isError = true;
+                state.message = payload!
+            })
+            .addCase(getMyProductsAndOrders.pending, state => {
+                state.isLoading = true;
+            })
+            .addCase(getMyProductsAndOrders.fulfilled, (state, action: PayloadAction<IMyOrdersResponse>) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.orderedProduct = action.payload.orderedProduct!
+                console.log(state.orderedProduct)
+            })
+            .addCase(getMyProductsAndOrders.rejected, (state, { payload }) => {
+                state.isError = true;
+                state.isLoading = false;
+                state.message = payload!
+            })
+            .addCase(markSellerOrdersDelivered.pending, state => {
+                state.isLoading = true;
+            })
+            .addCase(markSellerOrdersDelivered.fulfilled, state => {
+                state.isSuccess = true;
+                state.isLoading = true;
+            })
+            .addCase(markSellerOrdersDelivered.rejected, (state, { payload }) => {
+                state.isError = true;
+                state.isLoading = false;
                 state.message = payload!
             })
     }

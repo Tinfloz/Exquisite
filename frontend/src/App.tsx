@@ -11,6 +11,7 @@ import GetDeliveries from './pages/GetDeliveries';
 import HomePage from './pages/HomePage';
 import Landing from './pages/Landing';
 import LoginSeller from './pages/LoginSeller';
+import MarkDelivered from './pages/MarkDelivered';
 import MyProducts from './pages/MyProducts';
 import ProductPage from './pages/ProductPage';
 import RegisterClient from './pages/RegisterClient';
@@ -40,6 +41,7 @@ const App: FC = () => {
           <Route path="/create/product" element={<CreateProduct />} />
           <Route path="/my/products" element={<MyProducts />} />
           <Route path="/my/orders" element={<GetDeliveries />} />
+          <Route path="/mark/delivered/:productId/:orderId" element={<MarkDelivered />} />
           <Route path="/" element={<Landing />} />
         </Routes>
       </div>

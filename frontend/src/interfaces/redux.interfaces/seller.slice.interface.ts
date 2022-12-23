@@ -36,13 +36,26 @@ export interface ISingleMyOrder {
 
 export interface IMyOrdersResponse {
     success: boolean,
-    ordersArray: Array<ISingleMyOrder>
+    ordersArray?: Array<ISingleMyOrder>,
+    orderedProduct?: {
+        product: IProduct,
+        deliveryStatus: boolean
+    },
 };
 
 export interface ISellerSliceOrdersInit {
     orderStack: Array<ISingleMyOrder> | null,
+    orderedProduct: {
+        product: IProduct,
+        deliveryStatus: boolean
+    } | null
     isLoading: boolean,
     isSuccess: boolean,
     isError: boolean,
     message: string | ValidationErrors
+};
+
+export interface IParamGetProductOrder {
+    orderId: string,
+    productId: string
 }

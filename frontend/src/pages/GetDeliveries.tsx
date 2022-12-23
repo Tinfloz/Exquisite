@@ -1,5 +1,5 @@
 import React, { FC, useEffect } from 'react';
-import { getAllSellerOrders } from '../reducers/seller.reducer/seller.slice';
+import { getAllSellerOrders, resetSeller, resetSellerHelpers } from '../reducers/seller.reducer/seller.slice';
 import { useAppDispatch, useAppSelector } from '../typed.hooks/hooks';
 import { Flex, Spinner, Table, TableCaption, TableContainer, Tbody, Td, Th, Thead, Tr, Text } from "@chakra-ui/react";
 import { Link } from "react-router-dom"
@@ -13,6 +13,12 @@ const GetDeliveries: FC = () => {
         (async () => {
             dispatch(getAllSellerOrders())
         })()
+    }, [dispatch])
+
+    useEffect(() => {
+        return () => {
+            dispatch(resetSeller())
+        }
     }, [dispatch])
 
     if (!orderStack) {
@@ -74,7 +80,7 @@ const GetDeliveries: FC = () => {
                                         {
                                             orderStack?.map(element => (
                                                 <Tr>
-                                                    <Link to="#">
+                                                    <Link to={`/mark/delivered/${element.productId}/${element.orderId}`}>
                                                         <Td>{element.orderId}</Td>
                                                     </Link>
                                                     <Td>{element.qty}</Td>

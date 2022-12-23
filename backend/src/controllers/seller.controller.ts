@@ -224,42 +224,129 @@ const getAllOrders = async (req: Request, res: Response): Promise<void> => {
 };
 
 // mark delivered
+// const markDelivered = async (req: Request, res: Response): Promise<void> => {
+//     try {
+//         const { orderId, productId } = req.params;
+//         if (multiIdValidator([orderId, productId])) {
+//             throw "ids invalid"
+//         };
+//         const order = await Orders.findById(orderId);
+//         const seller = await Sellers.findOne({
+//             userId: req.user!._id
+//         }).populate("userId");
+//         const product = await Products.findById(productId);
+//         for (let element of order!.items) {
+//             if (element!.product.toString() === productId) {
+//                 element.delivered = true;
+//                 product!.stock = product!.stock - 1;
+//                 await product!.save()
+//                 await order!.save();
+//                 break;
+//             };
+//         };
+//         if (product!.stock <= 10) {
+//             try {
+//                 await sendEmail({
+//                     email: Users.instanceOfUser(seller!.userId) ? seller!.userId!.email : undefined,
+//                     subject: `Restock product ${product!._id}`,
+//                     emailToSend: `Stock of product: ${product!._id} less than 10`
+//                 })
+//             } catch (error) {
+//                 console.log(error)
+//             };
+//         };
+//         res.status(200).json({
+//             success: true,
+//             productId,
+//             orderId
+//         });
+//     } catch (error: any) {
+//         res.status(500).json({
+//             success: false,
+//             error: error.errors?.[0]?.message || error
+//         });
+//     };
+// };
+
+
+export {
+    createProduct,
+    updateStock,
+    deleteProduct,
+    getAllOrders,
+    markDelivered,
+    getOrderAndProduct
+};
+
 const markDelivered = async (req: Request, res: Response): Promise<void> => {
     try {
         const { orderId, productId } = req.params;
         if (multiIdValidator([orderId, productId])) {
-            throw "ids invalid"
+            throw "id invalid"
         };
-        const order = await Orders.findById(orderId);
+        const product = await Products.findById(productId);
+        if (!product) {
+            throw "product not found"
+        };
+        const order = await Orders.findById(orderId).populate({
+            path: "buyer",
+            populate: {
+                path: "userId"
+            }
+        });
+        if (!order) {
+            throw "order not found"
+        };
         const seller = await Sellers.findOne({
             userId: req.user!._id
-        }).populate("userId");
-        const product = await Products.findById(productId);
-        for (let element of order!.items) {
-            if (element!.product.toString() === productId) {
+        }).populate("userId")
+        for (let element of order.items) {
+            if (element.product.toString() === productId &&
+                element.seller.toString() === seller!._id.toString()) {
                 element.delivered = true;
-                product!.stock = product!.stock - 1;
-                await product!.save()
-                await order!.save();
+                await order.save();
                 break;
             };
         };
-        if (product!.stock <= 10) {
+        product.stock = product.stock - 1;
+        await product.save();
+        if (product.stock <= 10) {
+            let email;
+            let subject = "Restock product";
+            let emailToSend = `Stock of product: ${product._id} (${product.item}) is low. Re-stock product in time!`;
+            if (Users.instanceOfUser(seller!.userId)) {
+                email = seller!.userId.email
+            }
             try {
                 await sendEmail({
-                    email: Users.instanceOfUser(seller!.userId) ? seller!.userId!.email : undefined,
-                    subject: `Restock product ${product!._id}`,
-                    emailToSend: `Stock of product: ${product!._id} less than 10`
+                    email,
+                    subject,
+                    emailToSend
                 })
-            } catch (error) {
+            } catch (error: any) {
                 console.log(error)
             };
         };
+        try {
+            let email;
+            let subject = "Item delivered";
+            let emailToSend = `Product ${product!.item} of order ID ${orderId} has been delivered`
+            if (Buyers.instanceOfBuyer(order!.buyer)) {
+                if (Users.instanceOfUser(order!.buyer!.userId)) {
+                    email = order!.buyer!.userId.email
+                };
+            };
+            await sendEmail({
+                email,
+                subject,
+                emailToSend
+            })
+        } catch (error: any) {
+            console.log(error)
+        };
         res.status(200).json({
-            success: true,
-            productId,
-            orderId
-        });
+            success: true
+        })
     } catch (error: any) {
         res.status(500).json({
             success: false,
@@ -268,12 +355,36 @@ const markDelivered = async (req: Request, res: Response): Promise<void> => {
     };
 };
 
-
-export {
-    createProduct,
-    updateStock,
-    deleteProduct,
-    getAllOrders,
-    markDelivered
+// get order and product
+const getOrderAndProduct = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { orderId, productId } = req.params;
+        console.log(orderId, productId)
+        if (multiIdValidator([orderId, productId])) {
+            throw "id not valid"
+        };
+        const order = await Orders.findById(orderId).populate("items.product");
+        if (!order) {
+            throw "order not found";
+        };
+        for (let element of order.items) {
+            if (Products.instanceOfProduct(element.product)) {
+                if (element.product!._id.toString() === productId) {
+                    console.log(element.product, "element")
+                    res.status(200).json({
+                        success: true,
+                        orderedProduct: {
+                            product: element.product,
+                            deliveryStatus: element.delivered
+                        },
+                    });
+                };
+            };
+        };
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            error: error.errors?.[0]?.message || error
+        });
+    };
 };
-
