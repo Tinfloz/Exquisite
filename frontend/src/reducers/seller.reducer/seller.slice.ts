@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice, current, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ValidationErrors } from "../../interfaces/redux.interfaces/redux.errors";
 import { IMyOrdersResponse, IParamGetProductOrder, ISellerSliceOrdersInit } from "../../interfaces/redux.interfaces/seller.slice.interface";
 import { RootState } from "../../store";
@@ -6,7 +6,7 @@ import sellerService from "./seller.service";
 
 const initialState: ISellerSliceOrdersInit = {
     orderStack: null,
-    orderedProduct: null,
+    productStack: null,
     isLoading: false,
     isSuccess: false,
     isError: false,
@@ -72,6 +72,44 @@ export const markSellerOrdersDelivered = createAsyncThunk<
     };
 });
 
+// get top products by sales
+export const getMyProductsBySales = createAsyncThunk<
+    IMyOrdersResponse,
+    void,
+    {
+        state: RootState,
+        rejectValue: ValidationErrors
+    }
+>("top/sales", async (_, thunkAPI) => {
+    try {
+        const token = thunkAPI.getState().auth.user?.token!;
+        return await sellerService.getMyTopProductsBySales(token)
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)
+            || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message)
+    };
+});
+
+// get top products by ratings
+export const getMyProductsByRatings = createAsyncThunk<
+    IMyOrdersResponse,
+    void,
+    {
+        state: RootState,
+        rejectValue: ValidationErrors
+    }
+>("top/ratings", async (_, thunkAPI) => {
+    try {
+        const token = thunkAPI.getState().auth.user!.token;
+        return await sellerService.getMyTopProductsByRatings(token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)
+            || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message)
+    };
+});
+
 const sellerSlice = createSlice({
     name: "seller",
     initialState,
@@ -80,7 +118,7 @@ const sellerSlice = createSlice({
         resetSellerHelpers: state => ({
             ...initialState,
             orderStack: state.orderStack,
-            orderedProduct: state.orderedProduct
+            productStack: state.productStack
         })
     },
     extraReducers: builder => {
@@ -104,8 +142,7 @@ const sellerSlice = createSlice({
             .addCase(getMyProductsAndOrders.fulfilled, (state, action: PayloadAction<IMyOrdersResponse>) => {
                 state.isLoading = false;
                 state.isSuccess = true;
-                state.orderedProduct = action.payload.orderedProduct!
-                console.log(state.orderedProduct)
+                state.productStack = action.payload.productStack!
             })
             .addCase(getMyProductsAndOrders.rejected, (state, { payload }) => {
                 state.isError = true;
@@ -122,6 +159,32 @@ const sellerSlice = createSlice({
             .addCase(markSellerOrdersDelivered.rejected, (state, { payload }) => {
                 state.isError = true;
                 state.isLoading = false;
+                state.message = payload!
+            })
+            .addCase(getMyProductsBySales.pending, state => {
+                state.isLoading = true;
+            })
+            .addCase(getMyProductsBySales.fulfilled, (state, action: PayloadAction<IMyOrdersResponse>) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.productStack = action.payload.productsArray!
+            })
+            .addCase(getMyProductsBySales.rejected, (state, { payload }) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = payload!
+            })
+            .addCase(getMyProductsByRatings.pending, state => {
+                state.isLoading = true;
+            })
+            .addCase(getMyProductsByRatings.fulfilled, (state, action: PayloadAction<IMyOrdersResponse>) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.productStack = action.payload!.productsArray!;
+            })
+            .addCase(getMyProductsByRatings.rejected, (state, { payload }) => {
+                state.isLoading = false;
+                state.isError = true;
                 state.message = payload!
             })
     }

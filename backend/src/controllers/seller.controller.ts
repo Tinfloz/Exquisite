@@ -8,6 +8,7 @@ import Buyers from "../models/buyer.model";
 import { multiIdValidator } from "../helpers/multi.id.validator";
 import { sendEmail } from "../utils/send.email";
 import Users from "../models/all.user.model";
+import _ from "lodash";
 import * as Redis from "redis";
 
 const redisClient = Redis.createClient();
@@ -224,60 +225,6 @@ const getAllOrders = async (req: Request, res: Response): Promise<void> => {
 };
 
 // mark delivered
-// const markDelivered = async (req: Request, res: Response): Promise<void> => {
-//     try {
-//         const { orderId, productId } = req.params;
-//         if (multiIdValidator([orderId, productId])) {
-//             throw "ids invalid"
-//         };
-//         const order = await Orders.findById(orderId);
-//         const seller = await Sellers.findOne({
-//             userId: req.user!._id
-//         }).populate("userId");
-//         const product = await Products.findById(productId);
-//         for (let element of order!.items) {
-//             if (element!.product.toString() === productId) {
-//                 element.delivered = true;
-//                 product!.stock = product!.stock - 1;
-//                 await product!.save()
-//                 await order!.save();
-//                 break;
-//             };
-//         };
-//         if (product!.stock <= 10) {
-//             try {
-//                 await sendEmail({
-//                     email: Users.instanceOfUser(seller!.userId) ? seller!.userId!.email : undefined,
-//                     subject: `Restock product ${product!._id}`,
-//                     emailToSend: `Stock of product: ${product!._id} less than 10`
-//                 })
-//             } catch (error) {
-//                 console.log(error)
-//             };
-//         };
-//         res.status(200).json({
-//             success: true,
-//             productId,
-//             orderId
-//         });
-//     } catch (error: any) {
-//         res.status(500).json({
-//             success: false,
-//             error: error.errors?.[0]?.message || error
-//         });
-//     };
-// };
-
-
-export {
-    createProduct,
-    updateStock,
-    deleteProduct,
-    getAllOrders,
-    markDelivered,
-    getOrderAndProduct
-};
-
 const markDelivered = async (req: Request, res: Response): Promise<void> => {
     try {
         const { orderId, productId } = req.params;
@@ -373,7 +320,7 @@ const getOrderAndProduct = async (req: Request, res: Response): Promise<void> =>
                     console.log(element.product, "element")
                     res.status(200).json({
                         success: true,
-                        orderedProduct: {
+                        productStack: {
                             product: element.product,
                             deliveryStatus: element.delivered
                         },
@@ -388,3 +335,104 @@ const getOrderAndProduct = async (req: Request, res: Response): Promise<void> =>
         });
     };
 };
+
+// get top products of seller by rating
+const getTopProductsByRatings = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const seller = await Sellers.findOne({
+            userId: req.user!._id
+        }).populate("userId").lean();
+        if (Users.instanceOfUser(seller!.userId!)) {
+            const data = await redisClient.get(`${seller!.userId!.name}TopProductsByRatings`);
+            if (data) {
+                res.status(200).json({
+                    success: true,
+                    productsArray: JSON.parse(data)
+                });
+            } else {
+                let productsArray = [];
+                for (let element of seller!.products!) {
+                    if (Products.instanceOfProduct(element)) {
+                        let total = element!.ratings!.reduce((pv, cv) => pv + cv) / element!.ratings!.length;
+                        Object.assign(element, { total });
+                        productsArray.push(element);
+                    }
+                }
+                redisClient.setEx(`${seller!.userId!.name}TopProductsByRatings`, 86400,
+                    JSON.stringify(_.orderBy(productsArray, "total", "desc")));
+                res.status(200).json({
+                    success: true,
+                    productsArray: _.orderBy(productsArray, "total", "desc")
+                });
+            };
+        };
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            error: error.errors?.[0]?.message || error
+        });
+    };
+};
+
+// get top products by sale{
+const getTopProductsBySales = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const seller = await Sellers.findOne({
+            userId: req.user!._id
+        }).populate("userId products").lean()
+        if (Users.instanceOfUser(seller!.userId!)) {
+            const data = await redisClient.get(`${seller!.userId!.name}getTopProductsBySales`);
+            if (data) {
+                res.status(200).json({
+                    success: true,
+                    productsArray: JSON.parse(data)
+                })
+            } else {
+                const productsArray = [];
+                for (let element of seller!.products!) {
+                    let newProduct = Object.assign(element, { totalSale: 0 });
+                    productsArray.push(newProduct)
+                };
+                for (let product of productsArray) {
+                    for await (let order of Orders.find()) {
+                        if (order.isPaid) {
+                            for (let element of order.items) {
+                                if (Products.instanceOfProduct(product)) {
+                                    if (element.product === product._id) {
+                                        product.totalSale += element.qty
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+                redisClient.setEx(`${seller!.userId!.name}getTopProductsBySales`, 86400,
+                    JSON.stringify(_.orderBy(productsArray, "totalSale", "desc")));
+                res.status(200).json({
+                    success: true,
+                    productsArray: _.orderBy(productsArray, "totalSale", "desc")
+                });
+            };
+        };
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            error: error.errors?.[0]?.message || error
+        });
+    };
+};
+
+export {
+    createProduct,
+    updateStock,
+    deleteProduct,
+    getAllOrders,
+    markDelivered,
+    getOrderAndProduct,
+    getTopProductsByRatings,
+    getTopProductsBySales
+};
+
+
+
+

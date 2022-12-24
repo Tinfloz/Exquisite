@@ -3,11 +3,12 @@ import { useAppSelector, useAppDispatch } from '../typed.hooks/hooks';
 import { Box, Button, Flex, Spinner, Text, VStack, useToast } from "@chakra-ui/react"
 import { useParams } from 'react-router-dom';
 import { getMyProductsAndOrders, markSellerOrdersDelivered, resetSellerHelpers } from '../reducers/seller.reducer/seller.slice';
+import { IProduct } from '../interfaces/redux.interfaces/product.interfaces';
 
 const MarkDelivered: FC = () => {
 
     const { productId, orderId } = useParams();
-    const { orderedProduct, isSuccess, isError } = useAppSelector(state => state.sellers);
+    const { productStack, isSuccess, isError } = useAppSelector(state => state.sellers);
     const [delivered, setDelivered] = useState(false);
     const dispatch = useAppDispatch();
     const toast = useToast();
@@ -38,6 +39,9 @@ const MarkDelivered: FC = () => {
         }
     }, [isSuccess, isError, toast, dispatch])
 
+    const instanceOfSingleProduct = (param: any): param is { product: IProduct, deliveryStatus: boolean } => {
+        return param.deliveryStatus !== undefined
+    };
 
     useEffect(() => {
         let productDetails = {
@@ -51,7 +55,7 @@ const MarkDelivered: FC = () => {
     }, [dispatch])
 
 
-    if (!orderedProduct) {
+    if (!productStack) {
         return (
             <>
                 <Flex
@@ -97,29 +101,45 @@ const MarkDelivered: FC = () => {
                             >
                                 Mark Order Delivered
                             </Text>
-                            <Text>
-                                {orderedProduct?.product?.item}
-                            </Text>
-                            <Text>
-                                {orderedProduct?.product?.stock}
-                            </Text>
-                            <Text>
-                                {orderedProduct?.deliveryStatus}
-                            </Text>
-                            <Button
-                                disabled={orderedProduct.deliveryStatus || delivered ? true : false}
-                                onClick={async () => {
-                                    setDelivered(true)
-                                    let productDetails = {
-                                        productId: productId!,
-                                        orderId: orderId!
-                                    };
-                                    await dispatch(markSellerOrdersDelivered(productDetails));
-                                    dispatch(resetSellerHelpers())
-                                }}
-                            >
-                                {orderedProduct.deliveryStatus ? "Delivered" : "Mark Delivered"}
-                            </Button>
+                            {
+                                instanceOfSingleProduct(productStack) ? (
+                                    <>
+                                        <Text>
+                                            {productStack?.product?.item}
+                                        </Text>
+                                        <Text>
+                                            {productStack?.product?.stock}
+                                        </Text>
+                                        <Text>
+                                            {productStack?.deliveryStatus}
+                                        </Text>
+                                        <Button
+                                            disabled={productStack.deliveryStatus || delivered ? true : false}
+                                            onClick={async () => {
+                                                setDelivered(true)
+                                                let productDetails = {
+                                                    productId: productId!,
+                                                    orderId: orderId!
+                                                };
+                                                await dispatch(markSellerOrdersDelivered(productDetails));
+                                                dispatch(resetSellerHelpers())
+                                            }}
+                                        >
+                                            {productStack.deliveryStatus ? "Delivered" : "Mark Delivered"}
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Text
+                                            as="b"
+                                            color="gray.300"
+                                            fontSize="4vh"
+                                        >
+                                            There has been an error loading this page
+                                        </Text>
+                                    </>
+                                )
+                            }
                         </VStack>
                     </Flex>
                 </Box>

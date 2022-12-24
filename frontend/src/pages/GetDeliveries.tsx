@@ -3,6 +3,7 @@ import { getAllSellerOrders, resetSeller, resetSellerHelpers } from '../reducers
 import { useAppDispatch, useAppSelector } from '../typed.hooks/hooks';
 import { Flex, Spinner, Table, TableCaption, TableContainer, Tbody, Td, Th, Thead, Tr, Text } from "@chakra-ui/react";
 import { Link } from "react-router-dom"
+import { ISingleMyOrder } from '../interfaces/redux.interfaces/seller.slice.interface';
 
 const GetDeliveries: FC = () => {
 
@@ -39,6 +40,10 @@ const GetDeliveries: FC = () => {
                 </Flex>
             </>
         )
+    }
+
+    const instanceOfSingleMyOrder = (param: any): param is ISingleMyOrder => {
+        return param.productId !== undefined && param.orderId !== undefined
     }
 
     return (
@@ -79,18 +84,33 @@ const GetDeliveries: FC = () => {
                                     <Tbody>
                                         {
                                             orderStack?.map(element => (
-                                                <Tr>
-                                                    <Link to={`/mark/delivered/${element.productId}/${element.orderId}`}>
-                                                        <Td>{element.orderId}</Td>
-                                                    </Link>
-                                                    <Td>{element.qty}</Td>
-                                                    <Td>{element.item}</Td>
-                                                    <Td>{element.productId}</Td>
-                                                    <Td>{element.address}</Td>
-                                                    <Td>{element.city}</Td>
-                                                    <Td>{element.province}</Td>
-                                                    <Td>{element.pincode}</Td>
-                                                </Tr>
+                                                instanceOfSingleMyOrder(element) ?
+                                                    (
+                                                        <>
+                                                            <Tr>
+                                                                <Link to={`/mark/delivered/${element.productId}/${element.orderId}`}>
+                                                                    <Td>{element.orderId}</Td>
+                                                                </Link>
+                                                                <Td>{element.qty}</Td>
+                                                                <Td>{element.item}</Td>
+                                                                <Td>{element.productId}</Td>
+                                                                <Td>{element.address}</Td>
+                                                                <Td>{element.city}</Td>
+                                                                <Td>{element.province}</Td>
+                                                                <Td>{element.pincode}</Td>
+                                                            </Tr>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Text
+                                                                fontSize="4vh"
+                                                                as="b"
+                                                                color="gray.300"
+                                                            >
+                                                                There was an error loading the page!
+                                                            </Text>
+                                                        </>
+                                                    )
                                             ))
                                         }
                                     </Tbody>

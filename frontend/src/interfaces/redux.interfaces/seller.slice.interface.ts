@@ -34,21 +34,29 @@ export interface ISingleMyOrder {
     pincode: string
 };
 
+export interface ITopProducts extends IProduct {
+    totalSales?: number,
+    total?: number
+}
+
 export interface IMyOrdersResponse {
     success: boolean,
     ordersArray?: Array<ISingleMyOrder>,
-    orderedProduct?: {
+    productStack?: {
         product: IProduct,
         deliveryStatus: boolean
     },
+    productsArray?: Array<ITopProducts>
 };
 
+
+
 export interface ISellerSliceOrdersInit {
-    orderStack: Array<ISingleMyOrder> | null,
-    orderedProduct: {
+    orderStack: Array<ISingleMyOrder> | null
+    productStack: {
         product: IProduct,
         deliveryStatus: boolean
-    } | null
+    } | Array<ITopProducts> | null
     isLoading: boolean,
     isSuccess: boolean,
     isError: boolean,
