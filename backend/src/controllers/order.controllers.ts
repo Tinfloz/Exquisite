@@ -5,6 +5,7 @@ import shortid from "shortid";
 import { Request, Response } from "express";
 import { orderZodSchema } from "../zod.schemas/order.zod.schemas";
 import crypto from "crypto";
+import Buyers from "../models/buyer.model";
 
 const createOrderWithRazorpay = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -60,10 +61,13 @@ const updateOrderToPaid = async (req: Request, res: Response): Promise<void> => 
             });
             return;
         };
+        const buyer = await Buyers.findOne({
+            userId: req.user!._id
+        });
         const order = await Orders.findById(id);
         if (!order) {
             throw "order not found"
-        }
+        };
         const { orderCreationId,
             razorpayPaymentId,
             razorpayOrderId,
@@ -78,6 +82,8 @@ const updateOrderToPaid = async (req: Request, res: Response): Promise<void> => 
         order.isPaidAt = new Date();
         order.rzpOrderId = razorpayOrderId;
         await order.save();
+        buyer?.orders!.push(order._id);
+        await buyer?.save();
         res.status(200).json({
             success: true
         });
@@ -101,7 +107,32 @@ const updateOrderToPaid = async (req: Request, res: Response): Promise<void> => 
     };
 };
 
+// get all buyer orders 
+const getBuyerOrders = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const buyer = await Buyers.findOne({
+            userId: req.user!._id
+        }).populate({
+            path: "orders",
+            populate: {
+                path: "items.product"
+            }
+        });
+        console.log(buyer, "buyer")
+        res.status(200).json({
+            success: true,
+            result: buyer!.orders
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            error: error.errors?.[0]?.message || error
+        });
+    }
+}
+
 export {
     createOrderWithRazorpay,
-    updateOrderToPaid
+    updateOrderToPaid,
+    getBuyerOrders
 };

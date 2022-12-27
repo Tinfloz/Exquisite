@@ -87,8 +87,27 @@ export const orderSingleItemById = createAsyncThunk<
         const message = (error.response && error.response.data && error.response.data.message)
             || error.message || error.toString();
         return thunkAPI.rejectWithValue(message)
+    };
+});
+
+// get all orders user
+export const getLoginBuyerOrders = createAsyncThunk<
+    IOrderResponse,
+    void,
+    {
+        state: RootState,
+        rejectValue: ValidationErrors
     }
-})
+>("orders/get", async (_, thunkAPI) => {
+    try {
+        const token = thunkAPI.getState().auth.user!.token;
+        return await orderService.getAllOrdersBuyer(token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)
+            || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message)
+    };
+});
 
 const orderSlice = createSlice({
     name: "orders",
@@ -149,6 +168,19 @@ const orderSlice = createSlice({
                 state.isSuccess = true;
             })
             .addCase(verifyPayment.rejected, (state, { payload }) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = payload!
+            })
+            .addCase(getLoginBuyerOrders.pending, state => {
+                state.isLoading = true;
+            })
+            .addCase(getLoginBuyerOrders.fulfilled, (state, action: PayloadAction<IOrderResponse>) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.order = action.payload.result;
+            })
+            .addCase(getLoginBuyerOrders.rejected, (state, { payload }) => {
                 state.isLoading = false;
                 state.isError = true;
                 state.message = payload!

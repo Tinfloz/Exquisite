@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '../typed.hooks/hooks';
 import { Flex, Spinner, Table, TableCaption, TableContainer, Tbody, Td, Th, Thead, Tr, Text } from "@chakra-ui/react";
 import { Link } from "react-router-dom"
 import { ISingleMyOrder } from '../interfaces/redux.interfaces/seller.slice.interface';
+import { resetOrderHelpers } from '../reducers/order.reducer/order.slice';
 
 const GetDeliveries: FC = () => {
 
@@ -21,6 +22,7 @@ const GetDeliveries: FC = () => {
             dispatch(resetSeller())
         }
     }, [dispatch])
+
 
     if (!orderStack) {
         return (

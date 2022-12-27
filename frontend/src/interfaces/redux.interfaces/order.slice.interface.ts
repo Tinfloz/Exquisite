@@ -17,15 +17,16 @@ export interface IOrder {
     total: number;
     isPaid: boolean;
     isPaidAt?: Date;
+    rzpOrderId?: string;
 };
 
 export interface IOrderResponse {
     success: boolean
-    result: IOrder
+    result: IOrder | Array<IOrder>
 };
 
 export interface IOrderInit {
-    order: IOrder | null,
+    order: IOrder | Array<IOrder> | null,
     razorpayResponse: any
     isLoading: boolean,
     isSuccess: boolean,

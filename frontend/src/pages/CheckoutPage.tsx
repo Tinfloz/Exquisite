@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState, useRef } from 'react';
-import { IOrderSingleItemParam } from '../interfaces/redux.interfaces/order.slice.interface';
+import { IOrder, IOrderSingleItemParam } from '../interfaces/redux.interfaces/order.slice.interface';
 import { initRazorpayOrder, orderCartItems, orderSingleItemById, resetOrderHelpers, verifyPayment } from '../reducers/order.reducer/order.slice';
 import { useAppDispatch, useAppSelector } from "../typed.hooks/hooks";
 import { Flex, Box, Text, Stack, HStack, Avatar, Spinner, VStack, Button } from "@chakra-ui/react";
@@ -25,6 +25,10 @@ const CheckoutPage: FC<ICheckOutProps> = ({ cart }) => {
 
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+
+    const instanceOfOrder = (param: any): param is IOrder => {
+        return param.items !== undefined
+    };
 
     let orderDetails = {}
     if (!cart) {
@@ -90,7 +94,7 @@ const CheckoutPage: FC<ICheckOutProps> = ({ cart }) => {
                         razorpayOrderId: response.razorpay_order_id,
                         razorpaySignature: response.razorpay_signature,
                     },
-                    orderId: order!._id
+                    orderId: instanceOfOrder(order) ? order!._id : null
                 };
                 await dispatch(verifyPayment(data))
             },
@@ -118,7 +122,7 @@ const CheckoutPage: FC<ICheckOutProps> = ({ cart }) => {
             paymentSuccessHandler()
         };
         if (isError && created) {
-            navigate("/")
+            navigate("/home")
         };
         setCreated(false);
     }, [isSuccess, isError, navigate, created])
@@ -186,21 +190,42 @@ const CheckoutPage: FC<ICheckOutProps> = ({ cart }) => {
                             spacing="2vh"
                         >
                             {
-                                order?.items?.map(element => (
-                                    <HStack spacing="2vh">
-                                        <Avatar
-                                            src={element.product.image}
-                                            name={element.product.item}
-                                            size="md"
-                                        />
-                                        <Text>{element.product.item}</Text>
-                                        <Text>${element.product.price.toFixed(2)}</Text>
-                                    </HStack>
-                                ))
+                                instanceOfOrder(order) ? (
+                                    <>
+                                        {
+                                            order?.items?.map(element => (
+                                                <>
+                                                    <VStack spacing="2.5vh">
+                                                        <HStack spacing="2vh">
+                                                            <Avatar
+                                                                src={element.product.image}
+                                                                name={element.product.item}
+                                                                size="md"
+                                                            />
+                                                            <Text>{element.product.item}</Text>
+                                                            <Text>${element.product.price.toFixed(2)}</Text>
+                                                        </HStack>
+                                                        <Text><strong>Shipping: </strong>${order?.shippingFee.toFixed(2)}</Text>
+                                                        <Text><strong>Sales tax: </strong>${order?.salesTax.toFixed(2)}</Text>
+                                                        <Text><strong>Subtotal: </strong>${order?.total.toFixed(2)}</Text>
+                                                    </VStack>
+                                                </>
+                                            ))
+                                        }
+                                    </>
+                                ) : (
+                                    <>
+                                        <Text
+                                            as="b"
+                                            fontSize="4vh"
+                                            color="gray.300"
+                                        >
+                                            There was an error loading this page!
+                                        </Text>
+                                    </>
+                                )
                             }
-                            <Text><strong>Shipping: </strong>${order?.shippingFee.toFixed(2)}</Text>
-                            <Text><strong>Sales tax: </strong>${order?.salesTax.toFixed(2)}</Text>
-                            <Text><strong>Subtotal: </strong>${order?.total.toFixed(2)}</Text>
+
                         </Stack>
                     </Flex>
                     <Flex
@@ -210,7 +235,9 @@ const CheckoutPage: FC<ICheckOutProps> = ({ cart }) => {
                         <Button
                             onClick={
                                 async () => {
-                                    await dispatch(initRazorpayOrder(order!._id));
+                                    if (instanceOfOrder(order)) {
+                                        await dispatch(initRazorpayOrder(order!._id));
+                                    }
                                     setCreated(true)
                                 }
                             }
@@ -219,7 +246,7 @@ const CheckoutPage: FC<ICheckOutProps> = ({ cart }) => {
                         </Button>
                     </Flex>
                 </Box>
-            </Flex>
+            </Flex >
         </>
     )
 }
