@@ -5,7 +5,7 @@ import {
     ButtonGroup,
     HStack, Select
 } from '@chakra-ui/react'
-import { useAppDispatch } from '../typed.hooks/hooks';
+import { useAppDispatch, useAppSelector } from '../typed.hooks/hooks';
 import { addItemsToCartById, resetUserHelpers, updateItemQtyInCart } from '../reducers/auth.reducer/auth.slice';
 import { useNavigate } from "react-router-dom";
 
@@ -21,6 +21,8 @@ interface IQuantity {
 }
 
 const IndividualProductCard: FC<ICardProp> = ({ cart, product, indProdPage, cartId }) => {
+
+    const { user } = useAppSelector(state => state.auth);
 
     console.log("child reremders")
 
@@ -125,7 +127,12 @@ const IndividualProductCard: FC<ICardProp> = ({ cart, product, indProdPage, cart
                                             <Button
                                                 onClick={(e) => {
                                                     e.preventDefault();
-                                                    navigate(`/checkout/${product._id}/${quantity.qty}`)
+                                                    if (!JSON.parse(localStorage.getItem("user")!).sendUser!.loginUser.address) {
+                                                        localStorage.setItem("path", `/checkout/${product._id}/${quantity.qty}`);
+                                                        navigate("/set/adress/client")
+                                                    } else {
+                                                        navigate(`/checkout/${product._id}/${quantity.qty}`)
+                                                    }
                                                 }}
                                             >
                                                 Order

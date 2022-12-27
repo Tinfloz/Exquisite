@@ -6,6 +6,7 @@ import { ValidationErrors } from "../../interfaces/redux.interfaces/redux.errors
 
 const initialState: IOrderInit = {
     order: null,
+    razorpayResponse: null,
     isLoading: false,
     isSuccess: false,
     isError: false,
@@ -24,6 +25,45 @@ export const orderCartItems = createAsyncThunk<
     try {
         const token: string = thunkAPI.getState().auth.user!.token;
         return await orderService.cartItemsCreateOrder(token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)
+            || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message)
+    };
+});
+
+// get razorpay response
+export const initRazorpayOrder = createAsyncThunk<
+    any,
+    string,
+    {
+        state: RootState,
+        rejectValue: ValidationErrors
+    }
+>("rzp/init", async (id, thunkAPI) => {
+    try {
+        const token = thunkAPI.getState().auth.user!.token;
+        return await orderService.razorpPayOrder(id, token)
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)
+            || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message)
+    };
+});
+
+// razorpay verification
+export const verifyPayment = createAsyncThunk<
+    { success: boolean },
+    any,
+    {
+        state: RootState,
+        rejectValue: ValidationErrors
+    }
+>("verify/rzp", async (verificationDetails, thunkAPI) => {
+    try {
+        const { details, orderId } = verificationDetails;
+        const token = thunkAPI.getState().auth.user!.token;
+        return await orderService.razorPayVerify(orderId, token, details);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message)
             || error.message || error.toString();
@@ -86,6 +126,31 @@ const orderSlice = createSlice({
             .addCase(orderSingleItemById.rejected, (state, { payload }) => {
                 state.isError = true;
                 state.isLoading = false;
+                state.message = payload!
+            })
+            .addCase(initRazorpayOrder.pending, state => {
+                state.isLoading = true;
+            })
+            .addCase(initRazorpayOrder.fulfilled, (state, action: PayloadAction<any>) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.razorpayResponse = action.payload.rzpOrder;
+            })
+            .addCase(initRazorpayOrder.rejected, (state, { payload }) => {
+                state.isError = true;
+                state.isLoading = false;
+                state.message = payload!
+            })
+            .addCase(verifyPayment.pending, state => {
+                state.isLoading = true;
+            })
+            .addCase(verifyPayment.fulfilled, state => {
+                state.isLoading = false;
+                state.isSuccess = true;
+            })
+            .addCase(verifyPayment.rejected, (state, { payload }) => {
+                state.isLoading = false;
+                state.isError = true;
                 state.message = payload!
             })
     }

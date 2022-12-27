@@ -1,19 +1,30 @@
-import React, { FC, useEffect } from 'react';
+import React, { FC, useEffect, useState, useRef } from 'react';
 import { IOrderSingleItemParam } from '../interfaces/redux.interfaces/order.slice.interface';
-import { orderCartItems, orderSingleItemById, resetOrderHelpers } from '../reducers/order.reducer/order.slice';
+import { initRazorpayOrder, orderCartItems, orderSingleItemById, resetOrderHelpers, verifyPayment } from '../reducers/order.reducer/order.slice';
 import { useAppDispatch, useAppSelector } from "../typed.hooks/hooks";
 import { Flex, Box, Text, Stack, HStack, Avatar, Spinner, VStack, Button } from "@chakra-ui/react";
+import { useNavigate } from 'react-router-dom';
+import logo from "../assets/logo.jpeg";
 
 interface ICheckOutProps {
     cart: boolean
+};
+
+declare global {
+    interface Window {
+        Razorpay?: any;
+    }
 }
 
 const CheckoutPage: FC<ICheckOutProps> = ({ cart }) => {
 
-    const { order } = useAppSelector(state => state.orders);
-    const { user } = useAppSelector(state => state.auth)
+    const { order, razorpayResponse, isSuccess, isError } = useAppSelector(state => state.orders);
+    const { user } = useAppSelector(state => state.auth);
+    const [created, setCreated] = useState<boolean>(false);
+    const firstRenderRef = useRef(true);
 
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
 
     let orderDetails = {}
     if (!cart) {
@@ -24,7 +35,6 @@ const CheckoutPage: FC<ICheckOutProps> = ({ cart }) => {
             }
         });
     };
-
 
     useEffect(() => {
         if (cart) {
@@ -40,6 +50,78 @@ const CheckoutPage: FC<ICheckOutProps> = ({ cart }) => {
             }
         })()
     }, [dispatch, JSON.stringify(orderDetails)])
+
+    const loadScript = (src: string) => {
+        return new Promise((resolve) => {
+            const script = document.createElement("script");
+            script.src = src;
+            script.onload = () => {
+                resolve(true);
+            };
+            script.onerror = () => {
+                resolve(false);
+            };
+            document.body.appendChild(script);
+        });
+    };
+
+    const paymentSuccessHandler = async (): Promise<any> => {
+        const res = await loadScript(
+            "https://checkout.razorpay.com/v1/checkout.js"
+        );
+
+        if (!res) {
+            console.log("Razorpay SDK failed to load. Are you online?");
+            return;
+        };
+        const options = {
+            key: "rzp_test_iERLWTclgpmLnx",
+            amount: razorpayResponse.amount,
+            currency: "INR",
+            name: "Exquisite!",
+            description: "Online Purchase",
+            image: { logo },
+            order_id: razorpayResponse.id,
+            handler: async (response: any) => {
+                const data = {
+                    details: {
+                        orderCreationId: razorpayResponse.id,
+                        razorpayPaymentId: response.razorpay_payment_id,
+                        razorpayOrderId: response.razorpay_order_id,
+                        razorpaySignature: response.razorpay_signature,
+                    },
+                    orderId: order!._id
+                };
+                await dispatch(verifyPayment(data))
+            },
+            prefill: {
+                name: user!.name,
+                email: user!.email,
+            },
+            notes: {
+                address: "Exquisite!",
+            },
+            theme: {
+                color: "#000",
+            },
+        };
+        const paymentObject = new window.Razorpay(options);
+        paymentObject.open();
+    };
+
+    useEffect(() => {
+        if (firstRenderRef.current) {
+            firstRenderRef.current = false;
+            return;
+        };
+        if (isSuccess && created) {
+            paymentSuccessHandler()
+        };
+        if (isError && created) {
+            navigate("/")
+        };
+        setCreated(false);
+    }, [isSuccess, isError, navigate, created])
 
     useEffect(() => {
         if (!cart) {
@@ -125,7 +207,14 @@ const CheckoutPage: FC<ICheckOutProps> = ({ cart }) => {
                         justify='center'
                         pt="1vh"
                     >
-                        <Button>
+                        <Button
+                            onClick={
+                                async () => {
+                                    await dispatch(initRazorpayOrder(order!._id));
+                                    setCreated(true)
+                                }
+                            }
+                        >
                             Place Order
                         </Button>
                     </Flex>

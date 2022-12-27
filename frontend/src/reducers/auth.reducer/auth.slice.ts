@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction, current } from "@reduxjs/toolkit";
-import { IUpdateCartParam, IUser } from "../../interfaces/redux.interfaces/auth.slice.interface";
+import { ISetAddressParam, ISetAddressResponse, IUpdateCartParam, IUser } from "../../interfaces/redux.interfaces/auth.slice.interface";
 import { IAuthInit, ICartResponse } from "../../interfaces/redux.interfaces/auth.slice.interface";
 import { IUserCreds } from "../../interfaces/user.creds";
 import { ValidationErrors } from "../../interfaces/redux.interfaces/redux.errors";
@@ -162,6 +162,25 @@ export const deleteProductsSeller = createAsyncThunk<
     };
 });
 
+// set user address
+export const setAddressUser = createAsyncThunk<
+    ISetAddressResponse,
+    ISetAddressParam,
+    {
+        state: RootState,
+        rejectValue: ValidationErrors
+    }
+>("address/set", async (addressDetails, thunkAPI) => {
+    try {
+        const token = thunkAPI.getState().auth.user!.token;
+        return await authService.setLoginUserAddress(token, addressDetails);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)
+            || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message)
+    };
+});
+
 const userSlice = createSlice({
     name: "auth",
     initialState,
@@ -303,6 +322,18 @@ const userSlice = createSlice({
             .addCase(deleteProductsSeller.rejected, (state, { payload }) => {
                 state.isError = true;
                 state.isLoading = false;
+                state.message = payload!
+            })
+            .addCase(setAddressUser.pending, state => {
+                state.isLoading = true;
+            })
+            .addCase(setAddressUser.fulfilled, state => {
+                state.isSuccess = true;
+                state.isLoading = false;
+            })
+            .addCase(setAddressUser.rejected, (state, { payload }) => {
+                state.isLoading = false;
+                state.isError = true;
                 state.message = payload!
             })
 

@@ -5,6 +5,14 @@ import { getMyProductsByRatings, getMyProductsBySales, resetSeller, resetSellerH
 import TopProductCard from '../components/TopProductCard';
 import { ITopProducts } from '../interfaces/redux.interfaces/seller.slice.interface';
 
+const instanceOfITopProductsRatings = (param: any): param is Array<ITopProducts> => {
+    return param[0].overall !== undefined
+};
+
+const instanceOfITopProductsSales = (param: any): param is Array<ITopProducts> => {
+    return param.length !== undefined && param[0].totalSale !== undefined
+};
+
 
 const TopProducts: FC = () => {
     return (
@@ -36,7 +44,7 @@ const TopProductsBySales: FC = () => {
 
     const dispatch = useAppDispatch();
     const { productStack } = useAppSelector(state => state.sellers);
-    console.log(productStack)
+    console.log(productStack, "in sales")
 
     useEffect(() => {
         (async () => {
@@ -51,9 +59,6 @@ const TopProductsBySales: FC = () => {
         }
     }, [dispatch])
 
-    const instanceOfITopProductsSales = (param: any): param is Array<ITopProducts> => {
-        return param.length !== undefined && param[0].totalSale !== undefined
-    }
 
     if (!productStack || ((param: any): (boolean | void) => {
         if (typeof param === "object") {
@@ -62,6 +67,11 @@ const TopProductsBySales: FC = () => {
             }
             return false
         }
+    })(productStack) || ((param: any): boolean => {
+        if (instanceOfITopProductsRatings(param)) {
+            return true
+        }
+        return false
     })(productStack)) {
         return (
             <>
@@ -123,6 +133,8 @@ const TopProductsByRatings: FC = () => {
     const dispatch = useAppDispatch();
     const { productStack } = useAppSelector(state => state.sellers);
 
+    console.log(productStack, "in by ratings")
+
     useEffect(() => {
         (async () => {
             await dispatch(getMyProductsByRatings());
@@ -136,9 +148,6 @@ const TopProductsByRatings: FC = () => {
         }
     }, [dispatch])
 
-    const instanceOfITopProductsRatings = (param: any): param is Array<ITopProducts> => {
-        return param[0].total !== undefined
-    }
 
     if (!productStack || ((param: any): (boolean | void) => {
         if (typeof param === "object") {
@@ -147,6 +156,11 @@ const TopProductsByRatings: FC = () => {
             }
             return false
         }
+    })(productStack) || ((param: any): boolean => {
+        if (instanceOfITopProductsSales(param)) {
+            return true
+        }
+        return false
     })(productStack)) {
         return (
             <>

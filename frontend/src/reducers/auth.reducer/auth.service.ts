@@ -1,6 +1,6 @@
 import axios from "axios";
 import { IUserCreds } from "../../interfaces/user.creds";
-import { IQty, IUser } from "../../interfaces/redux.interfaces/auth.slice.interface";
+import { IQty, ISetAddressParam, ISetAddressResponse, IUser } from "../../interfaces/redux.interfaces/auth.slice.interface";
 import { ICartResponse } from "../../interfaces/redux.interfaces/auth.slice.interface";
 import { IProduct } from "../../interfaces/redux.interfaces/product.interfaces";
 import { ISellerCreateProductParam, ISellerResponse } from "../../interfaces/redux.interfaces/seller.slice.interface";
@@ -178,7 +178,32 @@ const deleteSellerProducts = async (id: string, token: string): Promise<ISellerR
     };
     localStorage.setItem("user", JSON.stringify(newUser));
     return response.data;
-}
+};
+
+const setLoginUserAddress = async (token: string, addressDetails: ISetAddressParam): Promise<ISetAddressResponse> => {
+    const config = {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    };
+    const response = await axios.post(API_URL + "/set/address", addressDetails, config);
+    const { address, city, province, pincode } = response.data.sendAddress;
+    const user = JSON.parse(localStorage.getItem("user")!);
+    const newLoginUser = {
+        ...user.sendUser.loginUser,
+        address, city, province, pincode
+    };
+    const newSendUser = {
+        ...user.sendUser,
+        "loginUser": newLoginUser
+    };
+    const newUser = {
+        ...user,
+        "sendUser": newSendUser
+    };
+    localStorage.setItem("user", JSON.stringify(newUser));
+    return response.data;
+};
 
 const authService = {
     loginUser,
@@ -188,7 +213,8 @@ const authService = {
     clearAllItems,
     updateProductQtyCart,
     createNewProductsSeller,
-    deleteSellerProducts
+    deleteSellerProducts,
+    setLoginUserAddress
 };
 
 export default authService;

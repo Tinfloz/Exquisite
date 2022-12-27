@@ -27,7 +27,15 @@ const SellerHomeCard: FC<ISellerCard> = ({ heading, text, buttonText, nav }) => 
                 <CardFooter>
                     <Button colorScheme='blue'
                         onClick={
-                            () => navigate(nav)
+                            () => {
+                                if (nav === "/create/product") {
+                                    if (!JSON.parse(localStorage.getItem("user")!).sendUser!.loginUser.address) {
+                                        navigate("/set/address/vendor")
+                                    } else {
+                                        navigate("/create/product")
+                                    }
+                                }
+                            }
                         }
                     >{buttonText}</Button>
                 </CardFooter>

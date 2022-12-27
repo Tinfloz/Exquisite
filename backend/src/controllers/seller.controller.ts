@@ -353,8 +353,8 @@ const getTopProductsByRatings = async (req: Request, res: Response): Promise<voi
                 let productsArray = [];
                 for (let element of seller!.products!) {
                     if (Products.instanceOfProduct(element)) {
-                        let total = element!.ratings!.reduce((pv, cv) => pv + cv) / element!.ratings!.length;
-                        Object.assign(element, { total });
+                        let overall = element!.ratings!.reduce((pv, cv) => pv + cv) / element!.ratings!.length;
+                        Object.assign(element, { overall });
                         productsArray.push(element);
                     }
                 }

@@ -120,24 +120,23 @@ const setUserAddress = async (req: Request, res: Response): Promise<void> => {
             });
             return;
         };
-        const { address, city, province, pincode, userType } = result.data;
-        const userAddress = `${address}, ${city}`
-        const [latitude, longitude] = await getLatLong(userAddress)
-        const loggedInUser = userType === "Buyer" ? await Buyers.findOneAndUpdate({
+        const { address, city, pincode, province } = result.data;
+        const user = await Users.findById(req.user!._id);
+        const addressUser = `${address}, ${city}`
+        const [latitude, longitude] = await getLatLong(addressUser)
+        user?.userType === "Buyer" ? await Buyers.findOneAndUpdate({
             userId: req.user!._id
-        }, { address, city, province, pincode, latitude, longitude }, { new: true }) :
+        }, { address, city, pincode, province, latitude, longitude }, { new: true }) :
             await Sellers.findOneAndUpdate({
                 userId: req.user!._id
-            }, { address, city, province, pincode, latitude, longitude }, { new: true })
+            }, { address, city, pincode, province, latitude, longitude }, { new: true })
         const sendAddress = {
-            address,
-            city,
-            province,
-            pincode
-        };
-        res.status(200).json({ sendAddress });
+            address, city, pincode, province,
+        }
+        res.status(200).json({
+            sendAddress
+        })
     } catch (error: any) {
-        console.log(error)
         res.status(500).json({
             success: false,
             error: error.errors?.[0]?.message || error

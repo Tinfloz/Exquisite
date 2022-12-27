@@ -8,6 +8,7 @@ import userRouter from "./routes/user.routes";
 import sellerRouter from "./routes/seller.routes";
 import buyerRouter from "./routes/buyer.routes";
 import productRouter from "./routes/product.routes";
+import orderRouter from "./routes/order.routes";
 
 dotenv.config();
 
@@ -40,6 +41,7 @@ app.use("/api/user", userRouter);
 app.use("/api/seller", sellerRouter);
 app.use("/api/buyer", buyerRouter);
 app.use("/api/product", productRouter);
+app.use("/api/order", orderRouter);
 
 app.use(errorHandler);
 // connect

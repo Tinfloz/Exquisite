@@ -36,7 +36,7 @@ export interface ISingleMyOrder {
 
 export interface ITopProducts extends IProduct {
     totalSales?: number,
-    total?: number
+    overall?: number
 }
 
 export interface IMyOrdersResponse {

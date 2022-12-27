@@ -9,6 +9,7 @@ export interface IItems {
 };
 
 export interface IOrder {
+    _id: string
     items: Array<IItems>
     buyer: string,
     shippingFee: number;
@@ -25,6 +26,7 @@ export interface IOrderResponse {
 
 export interface IOrderInit {
     order: IOrder | null,
+    razorpayResponse: any
     isLoading: boolean,
     isSuccess: boolean,
     isError: boolean,

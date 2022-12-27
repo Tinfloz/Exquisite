@@ -272,8 +272,12 @@ const ProductPage: FC<IProductPageProps> = ({ cart }) => {
                                     >
                                         <Button
                                             onClick={(e) => {
-                                                e.preventDefault();
-                                                navigate("/checkout")
+                                                if (!JSON.parse(localStorage.getItem("user")!).sendUser!.loginUser.address) {
+                                                    localStorage.setItem("path", "/checkout")
+                                                } else {
+                                                    e.preventDefault();
+                                                    navigate("/checkout")
+                                                }
                                             }}
                                         >
                                             Place Order

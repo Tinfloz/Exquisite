@@ -42,3 +42,14 @@ export interface IUpdateCartParam {
         qty: number
     }
 };
+
+export interface ISetAddressParam {
+    address: string,
+    city: string,
+    pincode: string,
+    province: string
+}
+
+export interface ISetAddressResponse {
+    sendAddress: ISetAddressParam
+}

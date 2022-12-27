@@ -18,6 +18,7 @@ export interface Order extends mongoose.Document {
     total: number;
     isPaid: boolean;
     isPaidAt?: Date;
+    rzpOrderId?: string
 }
 
 const orderSchema = new mongoose.Schema<Order>({
@@ -62,6 +63,9 @@ const orderSchema = new mongoose.Schema<Order>({
     },
     isPaidAt: {
         type: Date
+    },
+    rzpOrderId: {
+        type: String
     }
 });
 

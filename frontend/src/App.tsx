@@ -16,6 +16,7 @@ import MyProducts from './pages/MyProducts';
 import ProductPage from './pages/ProductPage';
 import RegisterClient from './pages/RegisterClient';
 import RegisterSeller from './pages/RegisterSeller';
+import SetAddress from './pages/SetAddress';
 import Test from './pages/Test';
 import TopProducts from './pages/TopProducts';
 import { useAppSelector } from './typed.hooks/hooks';
@@ -44,6 +45,8 @@ const App: FC = () => {
           <Route path="/my/orders" element={<GetDeliveries />} />
           <Route path="/mark/delivered/:productId/:orderId" element={<MarkDelivered />} />
           <Route path="/top/products" element={<TopProducts />} />
+          <Route path="/set/address/vendor" element={<SetAddress seller={true} />} />
+          <Route path="/set/address/client" element={<SetAddress seller={false} />} />
           <Route path="/" element={<Landing />} />
         </Routes>
       </div>

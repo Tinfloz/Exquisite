@@ -13,5 +13,4 @@ export const addressZodSchema = z.object({
     city: z.string(),
     province: z.string(),
     pincode: z.string(),
-    userType: z.string()
 });
