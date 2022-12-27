@@ -1,5 +1,6 @@
 import axios from "axios";
-import { IMyOrdersResponse } from "../../interfaces/redux.interfaces/seller.slice.interface";
+import { IMyOrdersResponse, ISellerStockResponse, IStockParam } from "../../interfaces/redux.interfaces/seller.slice.interface";
+import { IProduct } from "../../interfaces/redux.interfaces/product.interfaces";
 
 const API_URL = "http://localhost:5000/api/seller"
 
@@ -54,12 +55,34 @@ const getMyTopProductsByRatings = async (token: string): Promise<IMyOrdersRespon
     return response.data;
 };
 
+const updateSellerStockProduct = async (token: string, id: string, stockDetails: IStockParam): Promise<ISellerStockResponse> => {
+    const config = {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    };
+    const response = await axios.post(API_URL + `/update/stock/${id}`, stockDetails, config);
+    const user = JSON.parse(localStorage.getItem("user")!);
+    const newProducts = user.sendUser.loginUser.products.map((element: IProduct) => {
+        if (element._id === response.data.id) {
+            element.stock = response.data.stock
+        };
+        return element
+    });
+    const newLoginUser = { ...user.sendUser.loginUser, "products": newProducts };
+    const newSendUser = { ...user.sendUser, "loginUser": newLoginUser };
+    const newUser = { ...user, "sendUser": newSendUser };
+    localStorage.setItem("user", JSON.stringify(newUser));
+    return response.data;
+};
+
 const sellerService = {
     getAllMyOrders,
     getMyOrderAndProduct,
     markOrdersDeliveredSeller,
     getMyTopProductsBySales,
-    getMyTopProductsByRatings
+    getMyTopProductsByRatings,
+    updateSellerStockProduct
 };
 
 export default sellerService;

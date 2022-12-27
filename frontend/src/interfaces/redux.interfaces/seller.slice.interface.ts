@@ -66,4 +66,21 @@ export interface ISellerSliceOrdersInit {
 export interface IParamGetProductOrder {
     orderId: string,
     productId: string
-}
+};
+
+export interface ISellerStockResponse {
+    success: boolean,
+    id: string,
+    stock: string
+};
+
+export interface ISellerParamStockSlice {
+    productId: string,
+    quantity: {
+        stock: string
+    };
+};
+
+export interface IStockParam {
+    stock: string
+};

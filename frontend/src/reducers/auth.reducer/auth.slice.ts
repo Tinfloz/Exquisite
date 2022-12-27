@@ -181,6 +181,31 @@ export const setAddressUser = createAsyncThunk<
     };
 });
 
+// change user details 
+export const changeDetailsAccount = createAsyncThunk<
+    {
+        success: boolean,
+        email: string
+    },
+    {
+        email?: string,
+        password?: string,
+    },
+    {
+        state: RootState,
+        rejectValue: ValidationErrors
+    }
+>("change/details", async (changeDetails, thunkAPI) => {
+    try {
+        const token = thunkAPI.getState().auth.user!.token;
+        return await authService.changeUserDetails(token, changeDetails);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)
+            || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message)
+    };
+});
+
 const userSlice = createSlice({
     name: "auth",
     initialState,
@@ -336,7 +361,22 @@ const userSlice = createSlice({
                 state.isError = true;
                 state.message = payload!
             })
-
+            .addCase(changeDetailsAccount.pending, state => {
+                state.isLoading = false;
+            })
+            .addCase(changeDetailsAccount.fulfilled, (state, action: PayloadAction<{ success: boolean, email: string }>) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                state.user = {
+                    ...state.user!,
+                    email: action.payload.email
+                };
+            })
+            .addCase(changeDetailsAccount.rejected, (state, { payload }) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = payload!
+            })
     }
 });
 

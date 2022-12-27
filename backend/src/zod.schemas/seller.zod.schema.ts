@@ -9,5 +9,5 @@ export const productZodSchema = z.object({
 });
 
 export const stockZodSchema = z.object({
-    stock: z.number()
+    stock: z.string()
 });

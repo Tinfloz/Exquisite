@@ -45,7 +45,7 @@ const MyProducts: FC = () => {
                 pt="10vh"
             >
                 {
-                    user?.loginUser?.products.length === 0 ? (
+                    JSON.parse(localStorage.getItem("user")!).sendUser!.loginUser!.products.length === 0 ? (
                         <Text
                             as="b"
                             fontSize="5vh"
@@ -70,7 +70,7 @@ const MyProducts: FC = () => {
                                 </Thead>
                                 <Tbody>
                                     {
-                                        user?.loginUser?.products?.map((element: IProduct) => (
+                                        JSON.parse(localStorage.getItem("user")!).sendUser!.loginUser!.products.map((element: IProduct) => (
                                             <Tr key={element._id}>
                                                 <Td key={element._id}>{element._id}</Td>
                                                 <Td key={element._id}>{element.item}</Td>
@@ -79,18 +79,25 @@ const MyProducts: FC = () => {
                                                 <Td as="button"
                                                     onClick={onOpen}
                                                     key={element._id}
-                                                >Delete</Td>
+                                                >
+                                                    Update
+                                                </Td>
                                                 <Modal isOpen={isOpen} onClose={onClose}>
                                                     <ModalOverlay />
                                                     <ModalContent>
-                                                        <ModalHeader>{`Delete ${element.item}`}</ModalHeader>
+                                                        <ModalHeader>{`Update ${element.item}`}</ModalHeader>
                                                         <ModalCloseButton />
                                                         <ModalBody>
-                                                            {`Are you sure you want to delete ${element.item}`}
+                                                            {`Do you want to delete this product ${element.item} or update it?`}
                                                         </ModalBody>
                                                         <ModalFooter>
-                                                            <Button colorScheme='blue' mr={3} onClick={onClose}>
-                                                                Close
+                                                            <Button colorScheme='blue' mr={3}
+                                                                onClick={() => {
+                                                                    navigate(`/update/stock/${element!._id}`);
+                                                                    onClose();
+                                                                }}
+                                                            >
+                                                                Update
                                                             </Button>
                                                             <Button variant='ghost'
                                                                 onClick={async () => {

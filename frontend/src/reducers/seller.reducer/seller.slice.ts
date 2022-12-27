@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ValidationErrors } from "../../interfaces/redux.interfaces/redux.errors";
-import { IMyOrdersResponse, IParamGetProductOrder, ISellerSliceOrdersInit } from "../../interfaces/redux.interfaces/seller.slice.interface";
+import { IMyOrdersResponse, IParamGetProductOrder, ISellerParamStockSlice, ISellerSliceOrdersInit, ISellerStockResponse, IStockParam } from "../../interfaces/redux.interfaces/seller.slice.interface";
 import { RootState } from "../../store";
 import sellerService from "./seller.service";
 
@@ -110,6 +110,26 @@ export const getMyProductsByRatings = createAsyncThunk<
     };
 });
 
+// stock update
+export const stockUpdateSeller = createAsyncThunk<
+    ISellerStockResponse,
+    ISellerParamStockSlice,
+    {
+        state: RootState,
+        rejectValue: ValidationErrors
+    }
+>("stock/update", async (stockDetails, thunkAPI) => {
+    try {
+        const { productId, quantity } = stockDetails;
+        const token = thunkAPI.getState().auth.user!.token;
+        return await sellerService.updateSellerStockProduct(token, productId, quantity);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)
+            || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message)
+    };
+});
+
 const sellerSlice = createSlice({
     name: "seller",
     initialState,
@@ -183,6 +203,18 @@ const sellerSlice = createSlice({
                 state.productStack = action.payload!.productsArray!;
             })
             .addCase(getMyProductsByRatings.rejected, (state, { payload }) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = payload!
+            })
+            .addCase(stockUpdateSeller.pending, state => {
+                state.isLoading = true;
+            })
+            .addCase(stockUpdateSeller.fulfilled, state => {
+                state.isLoading = false;
+                state.isSuccess = true;
+            })
+            .addCase(stockUpdateSeller.rejected, (state, { payload }) => {
                 state.isLoading = false;
                 state.isError = true;
                 state.message = payload!

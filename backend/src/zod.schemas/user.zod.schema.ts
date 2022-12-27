@@ -14,3 +14,8 @@ export const addressZodSchema = z.object({
     province: z.string(),
     pincode: z.string(),
 });
+
+export const userAccChangeZodSchema = z.object({
+    email: z.string().optional(),
+    password: z.string().optional(),
+});

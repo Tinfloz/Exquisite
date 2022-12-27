@@ -205,6 +205,21 @@ const setLoginUserAddress = async (token: string, addressDetails: ISetAddressPar
     return response.data;
 };
 
+// change account details 
+const changeUserDetails = async (token: string, changeDetails: { email?: string, password?: string }): Promise<{ success: boolean, email: string }> => {
+    const config = {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    };
+    const response = await axios.post(API_URL + "/change/details", changeDetails, config);
+    const user = JSON.parse(localStorage.getItem("user")!);
+    const newSendUser = { ...user.sendUser, email: response.data.email };
+    const newUser = { ...user, "sendUser": newSendUser };
+    localStorage.setItem("user", JSON.stringify(newUser));
+    return response.data;
+};
+
 const authService = {
     loginUser,
     registerUser,
@@ -214,7 +229,8 @@ const authService = {
     updateProductQtyCart,
     createNewProductsSeller,
     deleteSellerProducts,
-    setLoginUserAddress
+    setLoginUserAddress,
+    changeUserDetails
 };
 
 export default authService;

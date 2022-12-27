@@ -34,6 +34,8 @@ const SellerHomeCard: FC<ISellerCard> = ({ heading, text, buttonText, nav }) => 
                                     } else {
                                         navigate("/create/product")
                                     }
+                                } else {
+                                    navigate(nav)
                                 }
                             }
                         }

@@ -64,11 +64,17 @@ const updateStock = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            throw "id not valid"
+            throw "id not valid";
         };
         const product = await Products.findById(id);
         if (!product) {
             throw "product not found";
+        };
+        const seller = await Sellers.findOne({
+            userId: req.user!._id
+        })
+        if (product?.seller.toString() !== seller!._id.toString()) {
+            throw "not authorized to change stock";
         };
         const result = stockZodSchema.safeParse(req.body);
         if (!result.success) {
@@ -78,16 +84,11 @@ const updateStock = async (req: Request, res: Response): Promise<void> => {
             });
             return;
         };
-        const seller = await Sellers.findOne({
-            userId: req.user!._id
-        })
-        if (product.seller.toString() !== seller!._id.toString()) {
-            throw "not authorized"
-        }
-        product.stock = result.data.stock;
+        product!.stock = Number(result.data.stock);
         await product.save();
         res.status(200).json({
             success: true,
+            id,
             stock: result.data.stock
         });
     } catch (error: any) {
@@ -96,7 +97,7 @@ const updateStock = async (req: Request, res: Response): Promise<void> => {
                 success: false,
                 error: error.errors?.[0]?.message || error
             });
-        } else if (error === "not authorized") {
+        } else if (error === "not authorized to change stock") {
             res.status(403).json({
                 success: false,
                 error: error.errors?.[0]?.message || error

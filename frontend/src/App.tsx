@@ -5,6 +5,7 @@ import {
 import './App.css';
 import NavBar from './components/NavBar';
 import UserCreds from './components/UserCreds';
+import ChangeDetails from './pages/ChangeDetails';
 import CheckoutPage from './pages/CheckoutPage';
 import CreateProduct from './pages/CreateProduct';
 import GetDeliveries from './pages/GetDeliveries';
@@ -20,6 +21,7 @@ import RegisterSeller from './pages/RegisterSeller';
 import SetAddress from './pages/SetAddress';
 import Test from './pages/Test';
 import TopProducts from './pages/TopProducts';
+import UpdateStock from './pages/UpdateStock';
 import { useAppSelector } from './typed.hooks/hooks';
 
 const App: FC = () => {
@@ -49,6 +51,8 @@ const App: FC = () => {
           <Route path="/set/address/vendor" element={<SetAddress seller={true} />} />
           <Route path="/set/address/client" element={<SetAddress seller={false} />} />
           <Route path="/get/all/orders" element={<MyOrders />} />
+          <Route path="/update/stock/:productId" element={<UpdateStock />} />
+          <Route path="/change/details/user" element={<ChangeDetails />} />
           <Route path="/" element={<Landing />} />
         </Routes>
       </div>

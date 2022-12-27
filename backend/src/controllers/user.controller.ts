@@ -5,6 +5,7 @@ import { Request, Response } from "express";
 import { userZodSchema, addressZodSchema } from "../zod.schemas/user.zod.schema";
 import { getToken } from "../utils/get.access.token";
 import { getLatLong } from "../helpers/get.lat.long";
+import { userAccChangeZodSchema } from "../zod.schemas/user.zod.schema";
 
 const register = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -144,8 +145,36 @@ const setUserAddress = async (req: Request, res: Response): Promise<void> => {
     };
 };
 
+const changeAccountDetails = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const result = userAccChangeZodSchema.safeParse(req.body);
+        if (!result.success) {
+            res.status(400).json({
+                success: false,
+                error: result.error
+            });
+            return
+        };
+        const user = await Users.findById(req.user!._id);
+        const { email, password } = result.data;
+        user!.email = email || user!.email;
+        user!.password = password || user!.password;
+        await user!.save();
+        res.status(200).json({
+            success: true,
+            email: user!.email
+        })
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            error: error.errors?.[0]?.message || error
+        });
+    };
+};
+
 export {
     register,
     login,
-    setUserAddress
+    setUserAddress,
+    changeAccountDetails
 }

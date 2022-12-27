@@ -6,6 +6,7 @@ import { IProduct } from '../interfaces/redux.interfaces/product.interfaces';
 import { getAllHomeProducts, resetProductHelpers, resetProducts } from '../reducers/product.reducer/product.slice';
 import SellerHomeCard from '../components/SellerHomeCard';
 import { useNavigate } from 'react-router-dom';
+import Footer from '../components/Footer';
 
 const HomePage: FC = () => {
 
@@ -114,6 +115,11 @@ const BuyerHome: FC = () => {
                         )
                 }
             </Flex>
+            <footer
+                id="footer"
+            >
+                <Footer />
+            </footer>
         </>
     )
 }
@@ -131,7 +137,7 @@ const SellerHome: FC = () => {
                     <SellerHomeCard heading={"Check Orders"} text={"Check orders that are to be delivered"}
                         buttonText={"Go"} nav={"/my/orders"} />
                     <SellerHomeCard heading={"Change account info"} text={"Change address and other details"}
-                        buttonText={"Go"} nav={"#"} />
+                        buttonText={"Go"} nav={"/change/details/user"} />
                 </VStack>
             </Flex>
         </>
