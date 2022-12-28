@@ -6,6 +6,7 @@ import './App.css';
 import NavBar from './components/NavBar';
 import UserCreds from './components/UserCreds';
 import ChangeDetails from './pages/ChangeDetails';
+import ChangePassword from './pages/ChangePassword';
 import CheckoutPage from './pages/CheckoutPage';
 import CreateProduct from './pages/CreateProduct';
 import GetDeliveries from './pages/GetDeliveries';
@@ -18,6 +19,7 @@ import MyProducts from './pages/MyProducts';
 import ProductPage from './pages/ProductPage';
 import RegisterClient from './pages/RegisterClient';
 import RegisterSeller from './pages/RegisterSeller';
+import ResetPasswordLink from './pages/ResetPasswordLink';
 import SetAddress from './pages/SetAddress';
 import Test from './pages/Test';
 import TopProducts from './pages/TopProducts';
@@ -53,6 +55,8 @@ const App: FC = () => {
           <Route path="/get/all/orders" element={<MyOrders />} />
           <Route path="/update/stock/:productId" element={<UpdateStock />} />
           <Route path="/change/details/user" element={<ChangeDetails />} />
+          <Route path="/get/reset/link" element={<ResetPasswordLink />} />
+          <Route path="/reset/password/:token" element={<ChangePassword />} />
           <Route path="/" element={<Landing />} />
         </Routes>
       </div>

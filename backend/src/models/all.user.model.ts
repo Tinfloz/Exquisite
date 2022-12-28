@@ -12,7 +12,8 @@ interface User {
 };
 
 export interface UserDocument extends User, mongoose.Document {
-    matchPassword: (password: string) => Promise<boolean>
+    matchPassword: (password: string) => Promise<boolean>,
+    getResetToken: () => string
 };
 
 interface UserModel extends mongoose.Model<UserDocument> {

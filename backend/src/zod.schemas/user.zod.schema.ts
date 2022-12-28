@@ -19,3 +19,12 @@ export const userAccChangeZodSchema = z.object({
     email: z.string().optional(),
     password: z.string().optional(),
 });
+
+export const resetPasswordLinkZodSchema = z.object({
+    email: z.string()
+});
+
+export const resetPasswordSetZodSchema = z.object({
+    password: z.string(),
+    confirmPassword: z.string()
+});

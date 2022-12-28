@@ -2,10 +2,12 @@ import Users from "../models/all.user.model";
 import Sellers from "../models/seller.model";
 import Buyers from "../models/buyer.model";
 import { Request, Response } from "express";
-import { userZodSchema, addressZodSchema } from "../zod.schemas/user.zod.schema";
+import { userZodSchema, addressZodSchema, resetPasswordLinkZodSchema, resetPasswordSetZodSchema } from "../zod.schemas/user.zod.schema";
 import { getToken } from "../utils/get.access.token";
 import { getLatLong } from "../helpers/get.lat.long";
 import { userAccChangeZodSchema } from "../zod.schemas/user.zod.schema";
+import { sendEmail } from "../utils/send.email";
+import crypto from "crypto";
 
 const register = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -172,9 +174,117 @@ const changeAccountDetails = async (req: Request, res: Response): Promise<void> 
     };
 };
 
+// reset password link generate
+const getResetPasswordLink = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const result = resetPasswordLinkZodSchema.safeParse(req.body);
+        if (!result.success) {
+            res.status(400).json({
+                success: false,
+                error: result.error
+            });
+            return;
+        };
+        const user = await Users.findOne({
+            email: result.data.email
+        });
+        if (!user) {
+            throw "user not found"
+        };
+        const resetToken = user.getResetToken();
+        await user.save();
+        const resetUrl = `${req.get("origin")}/reset/password/${resetToken}`;
+        const emailToSend = `Click on this link: ${resetUrl} to reset your password!`
+        const subject = "Reset password"
+        try {
+            await sendEmail({
+                email: result.data.email,
+                subject,
+                emailToSend
+            })
+        } catch (error: any) {
+            console.log(error);
+            user.resetToken = undefined;
+            user.resetTokenExpires = undefined;
+            await user.save();
+            res.status(500).json({
+                success: false,
+                error: error.errors?.[0]?.message || error
+            });
+            return;
+        };
+        res.status(200).json({
+            sucsess: true
+        })
+    } catch (error: any) {
+        if (error === "user not found") {
+            res.status(404).json({
+                success: false,
+                error: error.errors?.[0]?.message || error
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                error: error.errors?.[0]?.message || error
+            });
+        };
+    };
+};
+
+// reset password
+const resetPasswordSet = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { token } = req.params;
+        const result = resetPasswordSetZodSchema.safeParse(req.body);
+        if (!result.success) {
+            res.status(400).json({
+                success: false,
+                error: result.error
+            });
+            return;
+        };
+        const resetToken = crypto.createHash("sha256").update(token).digest("hex");
+        const user = await Users.findOne({
+            resetToken,
+            resetTokenExpires: {
+                $gt: Date.now()
+            }
+        });
+        if (!user) {
+            throw "token has expired"
+        };
+        const { password, confirmPassword } = result.data;
+        if (password !== confirmPassword) {
+            throw "passwords don't match"
+        };
+        user.password = password;
+        user.resetToken = undefined;
+        user.resetTokenExpires = undefined;
+        await user.save();
+        res.status(200).json({
+            success: true
+        });
+    } catch (error: any) {
+        if (error === "token has expired" || "passwords don't match") {
+            res.status(400).json({
+                success: false,
+                error: error.errors?.[0]?.message || error
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                error: error.errors?.[0]?.message || error
+            });
+        };
+    };
+};
+
+
 export {
     register,
     login,
     setUserAddress,
-    changeAccountDetails
+    changeAccountDetails,
+    getResetPasswordLink,
+    resetPasswordSet
 }

@@ -220,6 +220,18 @@ const changeUserDetails = async (token: string, changeDetails: { email?: string,
     return response.data;
 };
 
+// get reset link 
+const getResetLinkUser = async (email: { email: string }): Promise<{ success: boolean }> => {
+    const response = await axios.post(API_URL + "/reset/password/link", email);
+    return response.data;
+};
+
+// reset password set
+const setPasswordReset = async (passwordDetails: { password: string, confirmPassword: string }, token: string): Promise<{ success: boolean }> => {
+    const response = await axios.post(API_URL + `/reset/password/set/${token}`, passwordDetails);
+    return response.data;
+};
+
 const authService = {
     loginUser,
     registerUser,
@@ -230,7 +242,9 @@ const authService = {
     createNewProductsSeller,
     deleteSellerProducts,
     setLoginUserAddress,
-    changeUserDetails
+    changeUserDetails,
+    getResetLinkUser,
+    setPasswordReset
 };
 
 export default authService;

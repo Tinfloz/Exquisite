@@ -172,7 +172,7 @@ export const setAddressUser = createAsyncThunk<
     }
 >("address/set", async (addressDetails, thunkAPI) => {
     try {
-        const token = thunkAPI.getState().auth.user!.token;
+        const token: string = thunkAPI.getState().auth.user!.token;
         return await authService.setLoginUserAddress(token, addressDetails);
     } catch (error: any) {
         const message = (error.response && error.response.data && error.response.data.message)
@@ -205,6 +205,55 @@ export const changeDetailsAccount = createAsyncThunk<
         return thunkAPI.rejectWithValue(message)
     };
 });
+
+// get reset link
+export const getResetLink = createAsyncThunk<
+    {
+        success: boolean
+    },
+    {
+        email: string
+    },
+    {
+        state: RootState,
+        rejectValue: ValidationErrors
+    }
+>("reset/link", async (email, thunkAPI) => {
+    try {
+        return await authService.getResetLinkUser(email);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)
+            || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message)
+    };
+});
+
+// reset password set
+export const resetUserPasswordSet = createAsyncThunk<
+    {
+        success: boolean
+    },
+    {
+        token: string,
+        passwordChange: {
+            password: string,
+            confirmPassword: string
+        };
+    },
+    {
+        state: RootState,
+        rejectValue: ValidationErrors
+    }
+>("reset/password", async (passwordDetails, thunkAPI) => {
+    try {
+        const { token, passwordChange } = passwordDetails;
+        return await authService.setPasswordReset(passwordChange, token);
+    } catch (error: any) {
+        const message = (error.response && error.response.data && error.response.data.message)
+            || error.message || error.toString();
+        return thunkAPI.rejectWithValue(message)
+    };
+})
 
 const userSlice = createSlice({
     name: "auth",
@@ -373,6 +422,30 @@ const userSlice = createSlice({
                 };
             })
             .addCase(changeDetailsAccount.rejected, (state, { payload }) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = payload!
+            })
+            .addCase(getResetLink.pending, state => {
+                state.isLoading = true;
+            })
+            .addCase(getResetLink.fulfilled, state => {
+                state.isLoading = false;
+                state.isSuccess = true;
+            })
+            .addCase(getResetLink.rejected, (state, { payload }) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = payload!
+            })
+            .addCase(resetUserPasswordSet.pending, state => {
+                state.isLoading = true;
+            })
+            .addCase(resetUserPasswordSet.fulfilled, state => {
+                state.isLoading = false;
+                state.isSuccess = true;
+            })
+            .addCase(resetUserPasswordSet.rejected, (state, { payload }) => {
                 state.isLoading = false;
                 state.isError = true;
                 state.message = payload!

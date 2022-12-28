@@ -120,6 +120,21 @@ const UserCreds: FC<First> = ({ first, seller }) => {
                             first ? "Register" : "Login"
                         }
                     </Button>
+                    {
+                        first ? (
+                            null
+                        ) : (
+                            <Text
+                                as="button"
+                                color="gray.500"
+                                onClick={
+                                    () => navigate("/get/reset/link")
+                                }
+                            >
+                                Forgot Password? Reset!
+                            </Text>
+                        )
+                    }
                 </VStack>
             </Flex>
         </Box >
